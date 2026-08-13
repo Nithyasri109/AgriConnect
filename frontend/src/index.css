@@ -1,0 +1,129 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --primary-color: #A8D5BA;
+  --primary-light: #DFF2E1;
+  --secondary-color: #BFD8C2;
+  --accent-color: #CDEFE3;
+  --background-color: #F7FBF7;
+  --card-color: #FFFFFF;
+  --text-color: #34413A;
+  --muted-text-color: #6B756E;
+  --border-color: #DFF2E1;
+  --inner-box-color: #FFF8E7;
+  --transition-speed: 0.25s;
+}
+
+@layer base {
+  body {
+    background-color: var(--background-color);
+    color: var(--text-color);
+    transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+  }
+}
+
+.theme-bg {
+  background-color: var(--background-color) !important;
+  transition: background-color var(--transition-speed) ease;
+}
+.theme-card {
+  background-color: var(--card-color) !important;
+  color: var(--text-color) !important;
+  border-color: var(--border-color) !important;
+  transition: background-color var(--transition-speed) ease, border-color var(--transition-speed) ease, color var(--transition-speed) ease;
+}
+.theme-text {
+  color: var(--text-color) !important;
+  transition: color var(--transition-speed) ease;
+}
+.theme-text-muted {
+  color: var(--muted-text-color) !important;
+  transition: color var(--transition-speed) ease;
+}
+.theme-border {
+  border-color: var(--border-color) !important;
+  transition: border-color var(--transition-speed) ease;
+}
+.theme-primary-bg {
+  background-color: var(--primary-color) !important;
+  color: var(--text-color) !important;
+  transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+}
+.theme-primary-light-bg {
+  background-color: var(--primary-light) !important;
+  color: var(--text-color) !important;
+  transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+}
+.theme-secondary-bg {
+  background-color: var(--secondary-color) !important;
+  color: var(--text-color) !important;
+  transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+}
+.theme-accent-bg {
+  background-color: var(--accent-color) !important;
+  color: var(--text-color) !important;
+  transition: background-color var(--transition-speed) ease, color var(--transition-speed) ease;
+}
+.theme-inner-box {
+  background-color: var(--inner-box-color) !important;
+  border-color: var(--secondary-color) !important;
+  color: var(--text-color) !important;
+  transition: background-color var(--transition-speed) ease, border-color var(--transition-speed) ease, color var(--transition-speed) ease;
+}
+
+/* Global Form Elements Theme Override */
+input[type="text"], 
+input[type="email"], 
+input[type="password"], 
+input[type="tel"], 
+input[type="number"], 
+textarea, 
+select {
+  background-color: var(--card-color) !important;
+  color: var(--text-color) !important;
+  border-color: var(--border-color) !important;
+  transition: background-color var(--transition-speed) ease, border-color var(--transition-speed) ease, color var(--transition-speed) ease;
+}
+input::placeholder, textarea::placeholder {
+  color: var(--muted-text-color) !important;
+  opacity: 0.65;
+}
+
+/* Premium Custom Scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--primary-light);
+}
+::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 4px;
+}
+::-webkit-scrollbar-thumb:hover {
+  filter: brightness(0.9);
+}
+
+/* Subtle pulse green dot indicator */
+.pulse-green {
+  box-shadow: 0 0 0 0 var(--primary-color);
+  animation: pulseGreenAnim 2s infinite;
+}
+
+@keyframes pulseGreenAnim {
+  0% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 var(--primary-color);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 6px rgba(34, 197, 94, 0);
+  }
+  100% {
+    transform: scale(0.95);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0);
+  }
+}
