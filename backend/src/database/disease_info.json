@@ -596,5 +596,37 @@
       "Maintain sanitization protocols.",
       "Ensure good crop spacing."
     ]
+  },
+  "Rose___black_spot": {
+    "plant": "Rose",
+    "disease": "Black Spot",
+    "status": "infected",
+    "symptoms": "Circular black spots with feathery edges on leaves, leaf yellowing, and premature leaf drop starting from the bottom of the plant.",
+    "recommendations": [
+      "Prune affected leaves and destroy them.",
+      "Avoid watering foliage directly; water at soil level.",
+      "Apply sulfur or copper-based organic fungicides."
+    ],
+    "prevention": [
+      "Space rose plants to ensure good air circulation.",
+      "Plant in full sun to dry leaves quickly.",
+      "Clear fallen leaves around the base regularly."
+    ]
+  },
+  "General___diseased_leaf": {
+    "plant": "Unknown",
+    "disease": "General Disease / Leaf Infection",
+    "status": "infected",
+    "symptoms": "Irregular spots, discoloration, molding, or mechanical leaf damage indicating a potential localized infection.",
+    "recommendations": [
+      "Isolate the affected plant if possible.",
+      "Apply general-purpose organic neem oil spray.",
+      "Consult a local agricultural extension officer for detailed tests."
+    ],
+    "prevention": [
+      "Ensure tools are sanitized before pruning.",
+      "Avoid excess humidity and waterlog.",
+      "Maintain balanced soil nutrition."
+    ]
   }
 }

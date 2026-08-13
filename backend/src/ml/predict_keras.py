@@ -40,7 +40,7 @@ def predict(image_path):
         img = img.resize((224, 224))
         img_array = tf.keras.preprocessing.image.img_to_array(img)
         img_array = np.expand_dims(img_array, axis=0)
-        img_array = img_array / 255.0
+        img_array = tf.keras.applications.mobilenet_v2.preprocess_input(img_array)
 
         # Predict
         predictions = model.predict(img_array, verbose=0)
@@ -49,15 +49,22 @@ def predict(image_path):
         predicted_class = class_names[predicted_idx]
         confidence = float(score[predicted_idx]) * 100.0
 
-        # Parse plant and disease
-        if "___" in predicted_class:
-            plant_name, condition_name = predicted_class.split("___", 1)
+        # Low confidence guard (< 70%)
+        if confidence < 70.0:
+            predicted_class = "General___diseased_leaf"
+            plant_name = "Unknown"
+            condition_name = "Detection uncertain, please consult an agriculture expert."
+            status = "infected"
         else:
-            plant_name, condition_name = predicted_class, "unknown"
+            # Parse plant and disease
+            if "___" in predicted_class:
+                plant_name, condition_name = predicted_class.split("___", 1)
+            else:
+                plant_name, condition_name = predicted_class, "unknown"
 
-        plant_name = plant_name.replace("_", " ").strip()
-        condition_name = condition_name.replace("_", " ").strip()
-        status = "healthy" if "healthy" in condition_name.lower() else "infected"
+            plant_name = plant_name.replace("_", " ").strip()
+            condition_name = condition_name.replace("_", " ").strip()
+            status = "healthy" if "healthy" in condition_name.lower() else "infected"
 
         print(json.dumps({
             "success": True,
