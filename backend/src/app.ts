@@ -2543,6 +2543,36 @@ app.get('/api/plant-disease/history', authenticateToken, async (req: Authenticat
   }
 });
 
+// DELETE /api/plant-disease/history/:id
+app.delete('/api/plant-disease/history/:id', authenticateToken, async (req: AuthenticatedRequest, res) => {
+  const farmerId = req.userId;
+  if (!farmerId) {
+    return res.status(401).json({ error: 'Unauthorized.' });
+  }
+
+  const { id } = req.params;
+
+  try {
+    const analysis = await queryGet<any>(
+      'SELECT * FROM plant_health_analyses WHERE id = ? AND farmer_id = ?',
+      [id, farmerId]
+    );
+
+    if (!analysis) {
+      return res.status(404).json({ error: 'Analysis record not found or access denied.' });
+    }
+
+    await queryRun(
+      'DELETE FROM plant_health_analyses WHERE id = ? AND farmer_id = ?',
+      [id, farmerId]
+    );
+
+    res.json({ success: true, message: 'Analysis record deleted successfully.' });
+  } catch (err: any) {
+    res.status(500).json({ error: err.message });
+  }
+});
+
 // ---------------- SYSTEM ADMINISTRATOR DASHBOARD APIS ----------------
 
 // Helper to verify if user is admin

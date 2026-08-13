@@ -2390,12 +2390,23 @@ function AppContent() {
 
                     <div className="flex justify-between items-center border-t theme-border pt-3 mt-4">
                       <span className="text-[10px] text-slate-400 font-bold">Conf: {item.confidence}%</span>
-                      <button
-                        onClick={() => setSelectedHistoryItem(item)}
-                        className="px-3 py-1 bg-lime-600 text-white font-bold rounded-lg text-[10px] hover:bg-lime-500 transition-colors"
-                      >
-                        View Result
-                      </button>
+                      <div className="flex gap-2">
+                        <button
+                          type="button"
+                          onClick={() => deleteHistoryItem(item.id)}
+                          className="px-2.5 py-1 bg-red-500/10 text-red-600 font-bold rounded-lg text-[10px] hover:bg-red-500 hover:text-white transition-colors"
+                          title="Delete Record"
+                        >
+                          🗑️
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => setSelectedHistoryItem(item)}
+                          className="px-3 py-1 bg-lime-600 text-white font-bold rounded-lg text-[10px] hover:bg-lime-500 transition-colors"
+                        >
+                          View Result
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
@@ -2769,6 +2780,26 @@ function AppContent() {
       }
     } catch (e) {
       console.error('Error loading plant health history:', e);
+    }
+  };
+
+  const deleteHistoryItem = async (id: number) => {
+    if (!window.confirm("Are you sure you want to delete this analysis record?")) return;
+    try {
+      const res = await fetch(`/api/plant-disease/history/${id}`, {
+        method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('agrimind_token')}`
+        }
+      });
+      if (res.ok) {
+        loadPlantHistory();
+      } else {
+        const errData = await res.json();
+        alert(errData.error || 'Failed to delete record');
+      }
+    } catch (e) {
+      console.error('Error deleting plant history item:', e);
     }
   };
 
