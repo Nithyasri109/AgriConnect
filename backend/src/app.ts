@@ -891,7 +891,7 @@ app.post('/api/demo/run', authenticateToken, async (req, res) => {
 
 const seedDefaultMarketplaceProducts = async (farmerId: string) => {
   const check = await queryGet<{ count: number }>('SELECT count(*) as count FROM marketplace_products WHERE farmer_id = ?', [farmerId]);
-  if (check && check.count > 0) return;
+  if (check && check.count >= 20) return;
 
   const defaultProducts = [
     {
@@ -1161,6 +1161,9 @@ const seedDefaultMarketplaceProducts = async (farmerId: string) => {
   ];
 
   for (const p of defaultProducts) {
+    const exists = await queryGet<any>('SELECT 1 FROM marketplace_products WHERE farmer_id = ? AND name = ?', [farmerId, p.name]);
+    if (exists) continue;
+
     const prodId = 'prod_' + Math.random().toString(36).substr(2, 9);
     await queryRun(
       `INSERT INTO marketplace_products (id, farmer_id, name, category, crop, variety, quantity, unit, price, harvest_date, quality, description, image_url, status)
