@@ -2994,13 +2994,27 @@ function AppContent() {
     }
 
     const interval = setInterval(async () => {
-      const updated = await fetchOrderTracking(order.id);
-      if (updated?.delivery) {
-        setLiveTrackingInfo(updated);
-        if (user?.role === 'customer') loadCustomerOrders();
-        if (user?.role === 'farmer') loadFarmerOrders();
-      }
-    }, 3500);
+  const updated = await fetchOrderTracking(order.id);
+
+  if (updated?.delivery) {
+    setLiveTrackingInfo(updated);
+
+    // Refresh route/location points
+    const routeInfo = await fetchDeliveryRoute(updated.delivery.id);
+
+    if (routeInfo?.routePoints) {
+      setLiveRoutePoints(routeInfo.routePoints);
+    }
+
+    if (user?.role === 'customer') {
+      loadCustomerOrders();
+    }
+
+    if (user?.role === 'farmer') {
+      loadFarmerOrders();
+    }
+  }
+}, 3500);
 
     setActiveSimulationInterval(interval);
   };
@@ -7922,9 +7936,10 @@ function AppContent() {
                   </div>
 
                   {/* Proximity Alert Banner */}
-                  {liveTrackingInfo?.delivery?.remaining_distance_km !== null && 
-                   liveTrackingInfo?.delivery?.remaining_distance_km <= 0.5 && 
-                   liveTrackingInfo?.delivery?.remaining_distance_km > 0 && (
+                  {liveTrackingInfo?.delivery?.remaining_distance_km !== undefined && 
+                   liveTrackingInfo?.delivery?.remaining_distance_km !== null && 
+                   liveTrackingInfo.delivery.remaining_distance_km <= 0.5 && 
+                   liveTrackingInfo.delivery.remaining_distance_km > 0 && (
                     <div className="bg-gradient-to-r from-red-600/35 to-rose-600/20 border border-red-500/30 p-4 rounded-2xl mb-6 pulse-green">
                       <h4 className="text-sm font-extrabold text-white flex items-center gap-1.5 font-outfit">
                         <AlertTriangle className="w-4 h-4 text-red-500" /> YOUR ORDER IS NEARBY!
@@ -7967,7 +7982,7 @@ function AppContent() {
                       <div>
                         <span className="text-slate-500 block">Distance Remaining:</span>
                         <span className="text-sm font-bold text-white font-outfit">
-                          {liveTrackingInfo?.delivery?.remaining_distance_km !== null 
+                          {liveTrackingInfo?.delivery?.remaining_distance_km !== undefined && liveTrackingInfo?.delivery?.remaining_distance_km !== null 
                             ? `${liveTrackingInfo.delivery.remaining_distance_km} km` 
                             : '8.5 km'}
                         </span>
@@ -7975,7 +7990,7 @@ function AppContent() {
                       <div>
                         <span className="text-slate-500 block">Estimated ETA:</span>
                         <span className="text-sm font-bold text-emerald-400 font-outfit">
-                          {liveTrackingInfo?.delivery?.estimated_arrival_minutes !== null 
+                          {liveTrackingInfo?.delivery?.estimated_arrival_minutes !== undefined && liveTrackingInfo?.delivery?.estimated_arrival_minutes !== null 
                             ? `${liveTrackingInfo.delivery.estimated_arrival_minutes} mins` 
                             : '15 mins'} (LIVE ETA)
                         </span>
