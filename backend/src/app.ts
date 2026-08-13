@@ -2371,15 +2371,20 @@ app.post('/api/plant-disease/predict', authenticateToken, upload.single('image')
   const imageUrl = `/uploads/${fileName}`;
 
   try {
-    const modelPath = './backend/model.pth';
-    const classNamesPath = './backend/class_names.json';
+    const modelPath = path.join(__dirname, '..', '..', 'ml', 'models', 'plant_disease_model.keras');
+    const classNamesPath = path.join(__dirname, '..', '..', 'ml', 'models', 'class_names.json');
     const hasModel = fs.existsSync(modelPath) && fs.existsSync(classNamesPath);
 
     if (hasModel) {
-      // ML MODEL MODE
-      const predictScriptPath = path.join(__dirname, 'ml', 'predict.py');
+      // ML MODEL MODE (Keras)
+      let predictScriptPath = path.join(__dirname, 'ml', 'predict_keras.py');
+      if (!fs.existsSync(predictScriptPath)) {
+        predictScriptPath = path.join(__dirname, '..', 'src', 'ml', 'predict_keras.py');
+      }
       
-      execFile('python3', [predictScriptPath, filePath], async (error, stdout, stderr) => {
+      const pythonPath = path.join(__dirname, '..', '..', '.venv', 'bin', 'python3');
+      
+      execFile(pythonPath, [predictScriptPath, filePath], async (error, stdout, stderr) => {
         if (error) {
           console.error('Python prediction script error:', error, stderr);
           return res.status(500).json({ error: 'Prediction script execution failed.' });
@@ -2391,7 +2396,7 @@ app.post('/api/plant-disease/predict', authenticateToken, upload.single('image')
             return res.status(500).json({ error: outData.error || 'Prediction failed.' });
           }
 
-          await saveAndSendResult(outData.prediction, farmerId, imageUrl, '1.0.0-ONNX', res);
+          await saveAndSendResult(outData.prediction, farmerId, imageUrl, '2.0.0-KERAS', res);
         } catch (e: any) {
           return res.status(500).json({ error: 'Error parsing model output: ' + e.message });
         }
