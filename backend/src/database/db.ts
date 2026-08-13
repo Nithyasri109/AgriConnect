@@ -384,10 +384,15 @@ export const initDb = async () => {
       longitude REAL NOT NULL,
       speed REAL,
       heading REAL,
+      accuracy REAL,
       timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
       FOREIGN KEY(delivery_id) REFERENCES deliveries(id)
     )
   `);
+
+  try {
+    await queryRun('ALTER TABLE delivery_locations ADD COLUMN accuracy REAL');
+  } catch (e) {}
 
   // Ensure cancellation & coordinates columns exist in orders table
   try {

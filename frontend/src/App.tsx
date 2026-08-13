@@ -73,211 +73,164 @@ const GoogleMapComponent = ({
   customer: { lat: number; lng: number; name?: string };
 }) => {
   const mapRef = React.useRef<HTMLDivElement>(null);
-  const mapInstanceRef = React.useRef<any>(null);
-  const markersRef = React.useRef<any[]>([]);
+  const [mapType, setMapType] = React.useState<'none' | 'google' | 'leaflet'>('none');
+  const googleMapInstanceRef = React.useRef<any>(null);
+  const googleMarkersRef = React.useRef<any[]>([]);
+  const leafletMapInstanceRef = React.useRef<any>(null);
+  const leafletMarkersRef = React.useRef<any[]>([]);
 
+  // Dynamically load Google Maps or Leaflet on mount
   React.useEffect(() => {
     const apiKey = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY;
-    if (!apiKey) return;
-
-    if (!window.google) {
-      const script = document.createElement('script');
-      script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=geometry`;
-      script.async = true;
-      script.defer = true;
-      script.onload = initMap;
-      document.head.appendChild(script);
+    if (apiKey) {
+      if (!window.google) {
+        const script = document.createElement('script');
+        script.src = `https://maps.googleapis.com/maps/api/js?key=${apiKey}&libraries=geometry`;
+        script.async = true;
+        script.defer = true;
+        script.onload = () => setMapType('google');
+        script.onerror = () => loadLeaflet();
+        document.head.appendChild(script);
+      } else {
+        setMapType('google');
+      }
     } else {
-      initMap();
+      loadLeaflet();
     }
 
-    function initMap() {
-      if (!mapRef.current) return;
-
-      const mapOptions = {
-        center: { lat: 11.1271, lng: 78.6569 },
-        zoom: 7,
-        styles: [
-          {
-            "featureType": "administrative",
-            "elementType": "geometry",
-            "stylers": [{ "visibility": "off" }]
-          }
-        ]
-      };
-
-      if (!mapInstanceRef.current) {
-        mapInstanceRef.current = new window.google.maps.Map(mapRef.current, mapOptions);
+    function loadLeaflet() {
+      if (!document.getElementById('leaflet-css')) {
+        const link = document.createElement('link');
+        link.id = 'leaflet-css';
+        link.rel = 'stylesheet';
+        link.href = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.css';
+        document.head.appendChild(link);
       }
+      const L = (window as any).L;
+      if (!L) {
+        const script = document.createElement('script');
+        script.src = 'https://unpkg.com/leaflet@1.9.4/dist/leaflet.js';
+        script.async = true;
+        script.onload = () => setMapType('leaflet');
+        document.head.appendChild(script);
+      } else {
+        setMapType('leaflet');
+      }
+    }
+  }, []);
 
-      const map = mapInstanceRef.current;
+  // Update map markers when props change
+  React.useEffect(() => {
+    if (mapType === 'google' && window.google) {
+      if (!mapRef.current) return;
+      if (!googleMapInstanceRef.current) {
+        googleMapInstanceRef.current = new window.google.maps.Map(mapRef.current, {
+          center: { lat: 11.1271, lng: 78.6569 },
+          zoom: 7
+        });
+      }
+      const map = googleMapInstanceRef.current;
 
-      markersRef.current.forEach(m => m.setMap(null));
-      markersRef.current = [];
+      // Clear old google markers
+      googleMarkersRef.current.forEach(m => m.setMap(null));
+      googleMarkersRef.current = [];
 
       const farmMarker = new window.google.maps.Marker({
         position: pickup,
         map,
         title: pickup.name || 'Farmer Pickup',
-        icon: {
-          url: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png'
-        }
+        icon: { url: 'https://maps.google.com/mapfiles/ms/icons/green-dot.png' }
       });
-      markersRef.current.push(farmMarker);
+      googleMarkersRef.current.push(farmMarker);
 
       const custMarker = new window.google.maps.Marker({
         position: customer,
         map,
         title: customer.name || 'Customer Destination',
-        icon: {
-          url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png'
-        }
+        icon: { url: 'https://maps.google.com/mapfiles/ms/icons/blue-dot.png' }
       });
-      markersRef.current.push(custMarker);
+      googleMarkersRef.current.push(custMarker);
 
       if (delivery) {
         const delMarker = new window.google.maps.Marker({
           position: delivery,
           map,
           title: delivery.name || 'Delivery Partner',
-          icon: {
-            url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png'
-          }
+          icon: { url: 'https://maps.google.com/mapfiles/ms/icons/red-dot.png' }
         });
-        markersRef.current.push(delMarker);
+        googleMarkersRef.current.push(delMarker);
       }
 
-      try {
-        const directionsService = new window.google.maps.DirectionsService();
-        const directionsRenderer = new window.google.maps.DirectionsRenderer({
-          map,
-          suppressMarkers: true,
-          polylineOptions: {
-            strokeColor: '#A8D5BA',
-            strokeWeight: 5
-          }
-        });
-
-        directionsService.route(
-          {
-            origin: pickup,
-            destination: customer,
-            travelMode: window.google.maps.TravelMode.DRIVING
-          },
-          (result: any, status: any) => {
-            if (status === window.google.maps.DirectionsStatus.OK) {
-              directionsRenderer.setDirections(result);
-            }
-          }
-        );
-      } catch (e) {
-        console.error('Directions error:', e);
-      }
-
+      // Fit bounds
       const bounds = new window.google.maps.LatLngBounds();
       bounds.extend(pickup);
       bounds.extend(customer);
       if (delivery) bounds.extend(delivery);
       map.fitBounds(bounds);
+
+    } else if (mapType === 'leaflet') {
+      const L = (window as any).L;
+      if (!L || !mapRef.current) return;
+
+      if (!leafletMapInstanceRef.current) {
+        leafletMapInstanceRef.current = L.map(mapRef.current).setView([11.1271, 78.6569], 7);
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '&copy; OpenStreetMap contributors'
+        }).addTo(leafletMapInstanceRef.current);
+      }
+      const map = leafletMapInstanceRef.current;
+
+      // Clear old leaflet markers
+      leafletMarkersRef.current.forEach(m => m.remove());
+      leafletMarkersRef.current = [];
+
+      const createSVGIcon = (color: string, emoji: string) => {
+        return L.divIcon({
+          className: 'custom-div-icon',
+          html: `<div style="background-color: ${color}; width: 28px; height: 28px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 14px; box-shadow: 0 2px 5px rgba(0,0,0,0.3); border: 2px solid white;">${emoji}</div>`,
+          iconSize: [28, 28],
+          iconAnchor: [14, 14]
+        });
+      };
+
+      const pickupMarker = L.marker([pickup.lat, pickup.lng], { icon: createSVGIcon('#10b981', '🌾') })
+        .bindPopup(pickup.name || 'Farmer Pickup')
+        .addTo(map);
+      leafletMarkersRef.current.push(pickupMarker);
+
+      const custMarker = L.marker([customer.lat, customer.lng], { icon: createSVGIcon('#3b82f6', '🏠') })
+        .bindPopup(customer.name || 'Customer Destination')
+        .addTo(map);
+      leafletMarkersRef.current.push(custMarker);
+
+      if (delivery) {
+        const delMarker = L.marker([delivery.lat, delivery.lng], { icon: createSVGIcon('#ef4444', '🚚') })
+          .bindPopup(delivery.name || 'Delivery Partner')
+          .addTo(map);
+        leafletMarkersRef.current.push(delMarker);
+      }
+
+      // Fit bounds
+      const points = [
+        [pickup.lat, pickup.lng] as [number, number],
+        [customer.lat, customer.lng] as [number, number]
+      ];
+      if (delivery) points.push([delivery.lat, delivery.lng] as [number, number]);
+      map.fitBounds(L.latLngBounds(points), { padding: [40, 40] });
     }
-  }, [pickup, delivery, customer]);
+  }, [mapType, pickup, delivery, customer]);
 
-  const apiKey = (import.meta as any).env?.VITE_GOOGLE_MAPS_API_KEY;
-  if (!apiKey) {
-    const routeIndex = (() => {
-      if (!delivery) return 0;
-      let minD = Infinity;
-      let targetIdx = 0;
-      demoRoute.forEach((pt, idx) => {
-        const d = Math.pow(pt.lat - delivery.lat, 2) + Math.pow(pt.lng - delivery.lng, 2);
-        if (d < minD) {
-          minD = d;
-          targetIdx = idx;
-        }
-      });
-      return targetIdx;
-    })();
-
-    const svgPoints = [
-      { x: 60, y: 220 },
-      { x: 120, y: 190 },
-      { x: 180, y: 200 },
-      { x: 240, y: 150 },
-      { x: 300, y: 160 },
-      { x: 360, y: 110 },
-      { x: 440, y: 80 }
-    ];
-
-    const currentPt = svgPoints[routeIndex];
-    const pathD = "M 60 220 L 120 190 L 180 200 L 240 150 L 300 160 L 360 110 L 440 80";
-
-    return (
-      <div className="absolute inset-0 bg-[#FAFCF8] border border-[#DFF2E1] rounded-3xl flex flex-col justify-between overflow-hidden p-4 shadow-inner">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center text-xs font-semibold text-[#34413A] border-b border-[#DFF2E1] pb-2 mb-2 gap-2">
-          <span className="flex items-center gap-1.5"><Sparkles className="w-3.5 h-3.5 text-emerald-500 animate-pulse" /> Live Tracking Route</span>
-          <span className="text-[10px] bg-red-50 text-red-700 border border-red-200 px-2.5 py-0.5 rounded font-bold">
-            ⚠️ Map preview is unavailable. Please check Google Maps API key.
-          </span>
+  return (
+    <div className="w-full h-full min-h-[300px] relative rounded-3xl overflow-hidden border border-[#DFF2E1]">
+      {mapType === 'none' && (
+        <div className="absolute inset-0 bg-[#FAFCF8] flex flex-col items-center justify-center space-y-3 z-10">
+          <div className="w-10 h-10 border-4 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+          <span className="text-xs font-semibold text-slate-500">Loading Map View...</span>
         </div>
-        
-        <div className="flex-1 relative bg-white border border-[#DFF2E1]/80 rounded-2xl overflow-hidden shadow-sm flex items-center justify-center">
-          <div className="absolute inset-0 opacity-[0.03] bg-[radial-gradient(#34413A_1px,transparent_1px)] [background-size:16px_16px]" />
-          
-          <svg className="w-full h-full min-h-[200px]" viewBox="0 0 500 300">
-            <path
-              d={pathD}
-              fill="none"
-              stroke="#DFF2E1"
-              strokeWidth="10"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            />
-            <path
-              d={pathD}
-              fill="none"
-              stroke="#A8D5BA"
-              strokeWidth="4"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeDasharray="6 4"
-            />
-
-            {/* Farmer/Pickup Pin */}
-            <g transform="translate(60, 220)">
-              <circle r="14" fill="#DFF2E1" className="animate-ping opacity-60" />
-              <circle r="8" fill="#4ade80" />
-              <text y="-14" textAnchor="middle" className="text-[10px] font-bold fill-[#34413A] font-outfit">🌾 Pickup</text>
-            </g>
-
-            {/* Customer/Home Pin */}
-            <g transform="translate(440, 80)">
-              <circle r="14" fill="#C6DDF5" className="animate-ping opacity-60" />
-              <circle r="8" fill="#3b82f6" />
-              <text y="-14" textAnchor="middle" className="text-[10px] font-bold fill-[#34413A] font-outfit">🏠 Customer</text>
-            </g>
-
-            {/* Active Delivery Partner Marker */}
-            {delivery && (
-              <g transform={`translate(${currentPt.x}, ${currentPt.y})`} className="transition-all duration-700 ease-out">
-                <circle r="18" fill="rgba(239, 68, 68, 0.15)" className="animate-pulse" />
-                <circle r="9" fill="#ef4444" />
-                <text y="4" textAnchor="middle" className="text-sm">🚚</text>
-                <text y="-14" textAnchor="middle" className="text-[9px] font-bold fill-[#34413A] bg-white border border-[#DFF2E1] px-1 rounded shadow-sm">Courier</text>
-              </g>
-            )}
-          </svg>
-        </div>
-
-        <div className="flex justify-between items-center text-[10px] font-mono text-slate-500 mt-2 bg-[#FFF8E7] p-2 border border-[#BFD8C2]/30 rounded-xl">
-          <span>Speed: 30 km/h</span>
-          <span>Route: Direct Road</span>
-          <span>Fulfillment: <strong className="text-lime-600 uppercase font-bold">{delivery ? demoRoute[routeIndex].status : 'IDLE'}</strong></span>
-        </div>
-      </div>
-    );
-  }
-
-  return <div ref={mapRef} className="w-full h-full min-h-[300px] rounded-3xl overflow-hidden border border-[#DFF2E1]" />;
+      )}
+      <div ref={mapRef} className="absolute inset-0 w-full h-full" style={{ zIndex: 1 }} />
+    </div>
+  );
 };
 
 interface LocationPickerProps {
@@ -2559,6 +2512,9 @@ function AppContent() {
   const [selectedDeliveryOrder, setSelectedDeliveryOrder] = useState<any | null>(null);
   const [isDemoTracking, setIsDemoTracking] = useState(false);
   const [demoTrackingIndex, setDemoTrackingIndex] = useState(0);
+  const [isSharingLocation, setIsSharingLocation] = useState(false);
+  const [courierAccuracy, setCourierAccuracy] = useState<number | null>(null);
+  const [courierTimestamp, setCourierTimestamp] = useState<number | null>(null);
 
   // Secure vegetable order and payment protection states
   const [adminStats, setAdminStats] = useState<any>(null);
@@ -2721,12 +2677,14 @@ function AppContent() {
   useEffect(() => {
     let watchId: number | null = null;
 
-    if (isAuthenticated && user?.role === 'delivery' && selectedDeliveryOrder) {
+    if (isAuthenticated && user?.role === 'delivery' && selectedDeliveryOrder && isSharingLocation) {
       if (navigator.geolocation) {
         watchId = navigator.geolocation.watchPosition(
           async (pos) => {
             const latitude = pos.coords.latitude;
             const longitude = pos.coords.longitude;
+            const accuracy = pos.coords.accuracy;
+            const timestamp = pos.timestamp;
             
             try {
               await fetch(`/api/delivery/location`, {
@@ -2740,13 +2698,16 @@ function AppContent() {
                   orderId: selectedDeliveryOrder.order_id,
                   latitude,
                   longitude,
-                  timestamp: Date.now()
+                  accuracy,
+                  timestamp
                 })
               });
               
               // Local update for map indicators
               setCourierLat(latitude);
               setCourierLng(longitude);
+              setCourierAccuracy(accuracy);
+              setCourierTimestamp(timestamp);
             } catch (err) {
               console.error('Telemetry streaming error:', err);
             }
@@ -5696,14 +5657,61 @@ function AppContent() {
 
                   <div className={`${cardClass} p-6 space-y-4`}>
                     <h3 className="text-base font-bold font-outfit text-[#34413A] border-b border-[#DFF2E1] pb-2">GPS Tracking Control</h3>
-                    <div className="space-y-2">
+                    <div className="space-y-3">
                       <button
-                        onClick={startGeolocating}
-                        className="w-full py-2.5 bg-[#C6DDF5] hover:opacity-90 text-[#34413A] font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all"
+                        type="button"
+                        onClick={() => {
+                          if (isSharingLocation) {
+                            setIsSharingLocation(false);
+                            setCourierAccuracy(null);
+                            setCourierTimestamp(null);
+                          } else {
+                            if (navigator.geolocation) {
+                              navigator.geolocation.getCurrentPosition(
+                                (pos) => {
+                                  setIsSharingLocation(true);
+                                  setCourierAccuracy(pos.coords.accuracy);
+                                  setCourierTimestamp(pos.timestamp);
+                                },
+                                (err) => {
+                                  alert("GPS access denied. Please enable location permissions in your browser.");
+                                }
+                              );
+                            } else {
+                              alert("Geolocation is not supported by this browser.");
+                            }
+                          }
+                        }}
+                        className={`w-full py-2.5 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all ${
+                          isSharingLocation 
+                            ? 'bg-red-500 text-white hover:bg-red-600' 
+                            : 'bg-[#C6DDF5] text-[#34413A] hover:opacity-90'
+                        }`}
                       >
-                        Share Device Geolocation
+                        {isSharingLocation ? '🛑 Stop Live Location Sharing' : '📡 Share Live Location'}
                       </button>
+
+                      {isSharingLocation && courierAccuracy !== null && (
+                        <div className="p-3 bg-emerald-50 border border-emerald-200 rounded-xl text-[11px] text-[#34413A] space-y-1">
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">GPS Status:</span>
+                            <span className="font-bold text-emerald-600">ACTIVE</span>
+                          </div>
+                          <div className="flex justify-between">
+                            <span className="text-slate-500">Accuracy:</span>
+                            <span className="font-semibold">{courierAccuracy.toFixed(1)} meters</span>
+                          </div>
+                          {courierTimestamp && (
+                            <div className="flex justify-between">
+                              <span className="text-slate-500">Last Sync:</span>
+                              <span className="font-mono">{new Date(courierTimestamp).toLocaleTimeString()}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
+
                       <button
+                        type="button"
                         onClick={runDemoTrackingSim}
                         className={`w-full py-2.5 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all ${isDemoTracking ? 'bg-orange-500 text-white animate-pulse' : 'bg-orange-100 hover:bg-orange-200 text-orange-800'}`}
                       >
@@ -7767,7 +7775,18 @@ function AppContent() {
                       <div>
                         <span className="text-[10px] text-slate-500 block">DELIVERY PARTNER:</span>
                         <h4 className="text-sm font-bold text-white">{liveTrackingInfo?.delivery?.partner_name || 'Arun'}</h4>
-                        <span className="text-[10px] text-slate-455">{liveTrackingInfo?.delivery?.vehicle_type} &bull; {liveTrackingInfo?.delivery?.vehicle_number}</span>
+                        <span className="text-[10px] text-slate-455 block">{liveTrackingInfo?.delivery?.vehicle_type} &bull; {liveTrackingInfo?.delivery?.vehicle_number}</span>
+                        <span className="mt-1.5 inline-block text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/35 px-2 py-0.5 rounded-lg font-bold font-mono">
+                          {(() => {
+                            const status = liveTrackingInfo?.delivery?.status || 'ASSIGNED';
+                            if (status === 'ASSIGNED') return 'Delivery person assigned';
+                            if (status === 'PICKED_UP') return 'Order picked up at farm';
+                            if (status === 'OUT_FOR_DELIVERY') return 'Delivery person is on the way';
+                            if (status === 'NEAR_YOU' || status === 'NEAR CUSTOMER' || status === 'NEAR_CUSTOMER') return 'Delivery person is nearby';
+                            if (status === 'DELIVERED') return 'Order successfully delivered';
+                            return status;
+                          })()}
+                        </span>
                       </div>
                     </div>
 

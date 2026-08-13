@@ -1867,8 +1867,8 @@ app.get('/api/delivery/orders/:orderId', authenticateToken, async (req: Authenti
 
 // 3. Post telemetry location updates from Delivery Person
 app.post('/api/delivery/location', authenticateToken, async (req: AuthenticatedRequest, res) => {
-  const { deliveryId, deliveryPersonId, orderId, latitude, longitude } = req.body;
-  if (!latitude || !longitude) {
+  const { deliveryId, deliveryPersonId, orderId, latitude, longitude, accuracy, timestamp } = req.body;
+  if (latitude === undefined || longitude === undefined) {
     return res.status(400).json({ error: 'latitude and longitude are required.' });
   }
 
@@ -1885,10 +1885,11 @@ app.post('/api/delivery/location', authenticateToken, async (req: AuthenticatedR
 
     // Insert location coordinates entry
     const locId = `loc_tel_${finalDeliveryId}_${Date.now()}`;
+    const locationTime = timestamp ? new Date(timestamp).toISOString() : new Date().toISOString();
     await queryRun(
-      `INSERT INTO delivery_locations (id, delivery_id, latitude, longitude, speed, heading)
-       VALUES (?, ?, ?, ?, ?, ?)`,
-      [locId, finalDeliveryId, latitude, longitude, 30, 0]
+      `INSERT INTO delivery_locations (id, delivery_id, latitude, longitude, speed, heading, accuracy, timestamp)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+      [locId, finalDeliveryId, latitude, longitude, 30, 0, accuracy || null, locationTime]
     );
 
     // Calculate remaining distance to customer destination if available
