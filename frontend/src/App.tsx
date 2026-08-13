@@ -40,7 +40,8 @@ import {
   Sliders,
   TrendingUp,
   Palette,
-  Loader
+  Loader,
+  X
 } from 'lucide-react';
 import { 
   ResponsiveContainer, 
@@ -5666,9 +5667,10 @@ function AppContent() {
                     </div>
                     <button
                       onClick={stopTrackingPolling}
-                      className="text-slate-450 hover:text-red-400 text-sm font-semibold"
+                      className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-450 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+                      title="Close Tracker"
                     >
-                      Close Tracker
+                      <X className="w-5 h-5" />
                     </button>
                   </div>
 
@@ -8543,9 +8545,10 @@ function AppContent() {
                     </div>
                     <button
                       onClick={stopTrackingPolling}
-                      className="text-slate-450 hover:text-red-400 text-sm font-semibold"
+                      className="p-2 rounded-full hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-450 hover:text-slate-700 dark:hover:text-slate-200 transition-colors"
+                      title="Close Tracker"
                     >
-                      Close Tracker
+                      <X className="w-5 h-5" />
                     </button>
                   </div>
 
