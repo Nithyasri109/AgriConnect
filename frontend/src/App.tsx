@@ -2110,17 +2110,55 @@ function AppContent() {
                 )}
 
                 {activeResult.status === 'healthy' && (
-                  <div className={`${cardClass} p-5 rounded-3xl border border-slate-100 shadow-sm text-left`}>
-                    <h4 className="font-bold text-emerald-800 mb-2 text-xs uppercase tracking-wider">Recommendations</h4>
-                    <ul className="space-y-2 text-xs text-[#6B756E]">
-                      {activeResult.recommendations?.map((rec: string, i: number) => (
-                        <li key={i} className="flex items-start gap-2">
+                  <>
+                    {/* Recommended Fertilizers & Maintenance Card */}
+                    <div className={`${cardClass} p-5 rounded-3xl border border-slate-100 shadow-sm text-left`}>
+                      <h4 className="font-bold text-emerald-800 mb-2 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                        <span>🧪</span> Recommended Fertilizers & Maintenance
+                      </h4>
+                      <p className="text-xs text-slate-500 mb-3 leading-relaxed italic font-medium">
+                        "Keep your healthy crop strong, support robust root development, and maintain high disease resistance:"
+                      </p>
+                      <ul className="space-y-2 text-xs text-[#6B756E] font-medium">
+                        <li className="flex items-start gap-2">
                           <span className="text-emerald-500 shrink-0 mt-0.5">▪</span>
-                          <span>{rec}</span>
+                          <span>Well-rotted organic compost or FYM (Farm Yard Manure): Top-dress once every month to feed soil microbiomes.</span>
                         </li>
-                      ))}
-                    </ul>
-                  </div>
+                        <li className="flex items-start gap-2">
+                          <span className="text-emerald-500 shrink-0 mt-0.5">▪</span>
+                          <span>Balanced NPK Feed (e.g. 19-19-19): Apply in low concentrations during growth phases to supply essential nitrogen, potash, and phosphates.</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-emerald-500 shrink-0 mt-0.5">▪</span>
+                          <span>Organic Mulch (Straw, Dry Leaves): Spread a 2-inch layer around the roots to retain soil moisture and regulate soil temperature.</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-emerald-500 shrink-0 mt-0.5">▪</span>
+                          <span>Liquid Seaweed Extract / Foliar Spray: Spray early morning every 2-3 weeks to introduce trace micronutrients and mineral boost.</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-emerald-500 shrink-0 mt-0.5">▪</span>
+                          <span>Weeding & Soil Aeration: Gently till the topsoil around the plant to permit root breathing and clear competitive weed hosts.</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-emerald-500 shrink-0 mt-0.5">▪</span>
+                          <span>Proper Crop Spacing: Ensure adjacent leaves do not touch, facilitating free passage of air and drying of dew.</span>
+                        </li>
+                      </ul>
+                    </div>
+
+                    <div className={`${cardClass} p-5 rounded-3xl border border-slate-100 shadow-sm text-left`}>
+                      <h4 className="font-bold text-[#34413A] mb-2 text-xs uppercase tracking-wider">Recommendations</h4>
+                      <ul className="space-y-2 text-xs text-[#6B756E]">
+                        {activeResult.recommendations?.map((rec: string, i: number) => (
+                          <li key={i} className="flex items-start gap-2">
+                            <span className="text-emerald-500 shrink-0 mt-0.5">▪</span>
+                            <span>{rec}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </>
                 )}
 
                 <div className="flex gap-4 pt-2">
