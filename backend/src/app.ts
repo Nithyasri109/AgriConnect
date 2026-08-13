@@ -162,47 +162,6 @@ const registerUser = async (req: any, res: any, forcedRole?: string) => {
   }
 };
 
-const seedFarmerProducts = async (farmerId: string) => {
-  const products = [
-    { name: "Organic Red Tomatoes", category: "Vegetables", crop: "Tomato", variety: "Country Red", quantity: 150, unit: "kg", price: 40, desc: "Fresh farm-picked red country tomatoes, organic.", img: "https://images.unsplash.com/photo-1595855759920-86582396756a?auto=format&fit=crop&q=80&w=600" },
-    { name: "Fresh Potato Tubers", category: "Vegetables", crop: "Potato", variety: "Jyoti", quantity: 300, unit: "kg", price: 25, desc: "Freshly dug potato tubers, high starch content.", img: "https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&q=80&w=600" },
-    { name: "Sweet Hybrid Corn", category: "Vegetables", crop: "Corn", variety: "Sugar 75", quantity: 80, unit: "kg", price: 30, desc: "Tender, juicy, and sweet hybrid yellow corn.", img: "https://images.unsplash.com/photo-1551754655-cd27e38d2076?auto=format&fit=crop&q=80&w=600" },
-    { name: "Basmati Rice Premium", category: "Grains", crop: "Rice", variety: "Basmati 370", quantity: 500, unit: "kg", price: 85, desc: "Aromatic long grain basmati rice, aged 1 year.", img: "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&q=80&w=600" },
-    { name: "Sharbati Wheat Grain", category: "Grains", crop: "Wheat", variety: "Sharbati", quantity: 1000, unit: "kg", price: 35, desc: "Premium wheat grain from Madhya Pradesh.", img: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?auto=format&fit=crop&q=80&w=600" },
-    { name: "Red Onions", category: "Vegetables", crop: "Onion", variety: "Nasik Red", quantity: 400, unit: "kg", price: 30, desc: "Firm, crisp red onions direct from farm.", img: "https://images.unsplash.com/photo-1508747703725-719ae257c14a?auto=format&fit=crop&q=80&w=600" },
-    { name: "Nantes Carrots", category: "Vegetables", crop: "Carrot", variety: "Nantes", quantity: 120, unit: "kg", price: 45, desc: "Sweet, crunchy orange carrots, pesticide-free.", img: "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?auto=format&fit=crop&q=80&w=600" },
-    { name: "Green Spinach Bunches", category: "Vegetables", crop: "Spinach", variety: "Palak", quantity: 50, unit: "bunch", price: 15, desc: "Fresh green nutrient-rich spinach leaves.", img: "https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&q=80&w=600" },
-    { name: "Organic Garlic Bulbs", category: "Vegetables", crop: "Garlic", variety: "Ooty", quantity: 90, unit: "kg", price: 120, desc: "Strong aroma garlic bulbs, sun-dried.", img: "https://images.unsplash.com/photo-1540148426945-6cf22a6b2383?auto=format&fit=crop&q=80&w=600" },
-    { name: "Fresh Ginger Rhizomes", category: "Vegetables", crop: "Ginger", variety: "Calicut", quantity: 110, unit: "kg", price: 90, desc: "High quality ginger roots, washed.", img: "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&q=80&w=600" },
-    { name: "Purple Brinjals", category: "Vegetables", crop: "Brinjal", variety: "Varikatri", quantity: 70, unit: "kg", price: 28, desc: "Fresh glossy purple eggplants.", img: "https://images.unsplash.com/photo-1590301157890-4810ed352733?auto=format&fit=crop&q=80&w=600" },
-    { name: "Fresh Cabbage Heads", category: "Vegetables", crop: "Cabbage", variety: "Golden Acre", quantity: 150, unit: "piece", price: 20, desc: "Crunchy green cabbages.", img: "https://images.unsplash.com/photo-1581005886657-3f9fe5a73e6b?auto=format&fit=crop&q=80&w=600" },
-    { name: "Ladyfinger Okra", category: "Vegetables", crop: "Okra", variety: "Anamika", quantity: 60, unit: "kg", price: 35, desc: "Tender green bhindi (ladyfinger).", img: "https://images.unsplash.com/photo-1627916607164-7b20241db935?auto=format&fit=crop&q=80&w=600" },
-    { name: "Cauliflower Florets", category: "Vegetables", crop: "Cauliflower", variety: "Pusa", quantity: 80, unit: "piece", price: 25, desc: "White, fresh cauliflower heads.", img: "https://images.unsplash.com/photo-1568584711075-3d021a7c3ec3?auto=format&fit=crop&q=80&w=600" },
-    { name: "Organic Beetroots", category: "Vegetables", crop: "Beetroot", variety: "Detroit Red", quantity: 100, unit: "kg", price: 40, desc: "Deep red sweet beetroots.", img: "https://images.unsplash.com/photo-1585559606145-21d1b0ff424e?auto=format&fit=crop&q=80&w=600" },
-    { name: "Green Chillies", category: "Vegetables", crop: "Chilli", variety: "Guntur", quantity: 40, unit: "kg", price: 60, desc: "Spicy fresh green chillies.", img: "https://images.unsplash.com/photo-1588252303782-cb80119abd6d?auto=format&fit=crop&q=80&w=600" },
-    { name: "Fresh Coriander", category: "Vegetables", crop: "Coriander", variety: "Kothimbir", quantity: 100, unit: "bunch", price: 10, desc: "Aromatic coriander leaf bunches.", img: "https://images.unsplash.com/photo-1614735249474-3a817b51522c?auto=format&fit=crop&q=80&w=600" },
-    { name: "Bitter Gourd", category: "Vegetables", crop: "Bitter Gourd", variety: "Jaunpuri", quantity: 55, unit: "kg", price: 32, desc: "Healthy organic bitter gourds.", img: "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&q=80&w=600" },
-    { name: "Bottle Gourd", category: "Vegetables", crop: "Bottle Gourd", variety: "Pusa Summer", quantity: 90, unit: "piece", price: 18, desc: "Water-rich green bottle gourds.", img: "https://images.unsplash.com/photo-1592417817098-8f3d6eb19675?auto=format&fit=crop&q=80&w=600" },
-    { name: "Fresh Green Peas", category: "Vegetables", crop: "Peas", variety: "Bonneville", quantity: 130, unit: "kg", price: 50, desc: "Sweet green peas in pod.", img: "https://images.unsplash.com/photo-1592394533824-9440e5d68530?auto=format&fit=crop&q=80&w=600" },
-    { name: "Organic Turmeric", category: "Vegetables", crop: "Turmeric", variety: "Salem", quantity: 80, unit: "kg", price: 110, desc: "Fresh raw turmeric rhizomes.", img: "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&q=80&w=600" },
-    { name: "Sweet Potato", category: "Vegetables", crop: "Sweet Potato", variety: "Varsha", quantity: 140, unit: "kg", price: 30, desc: "Rich in fiber sweet potatoes.", img: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&q=80&w=600" }
-  ];
-
-  for (let i = 0; i < products.length; i++) {
-    const p = products[i];
-    const prodId = `prod_seed_${i}_${Date.now()}`;
-    try {
-      await queryRun(
-        `INSERT INTO marketplace_products (id, farmer_id, name, category, crop, variety, quantity, unit, price, harvest_date, quality, description, image_url, status)
-         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-        [prodId, farmerId, p.name, p.category, p.crop, p.variety, p.quantity, p.unit, p.price, new Date().toISOString().split('T')[0], "Grade A", p.desc, p.img, "ACTIVE"]
-      );
-    } catch (err: any) {
-      console.error("Seed product error:", err.message);
-    }
-  }
-};
-
 const loginUser = async (req: any, res: any, forcedRole?: string) => {
   const { email, password, rememberMe } = req.body;
   if (!email || !password) {
@@ -229,7 +188,6 @@ const loginUser = async (req: any, res: any, forcedRole?: string) => {
             'INSERT INTO farmer_profiles (user_id, farmer_name, phone, address, farm_location, crop_details) VALUES (?, ?, ?, ?, ?, ?)',
             [id, defaultName, 'No Phone', 'No Address', 'Coimbatore, Tamil Nadu', 'Tomato']
           );
-          await seedFarmerProducts(id);
         } else if (role === 'delivery') {
           await queryRun(
             'INSERT INTO delivery_partners (id, name, vehicle_type, vehicle_number, avatar_url, status) VALUES (?, ?, ?, ?, ?, ?)',
@@ -269,12 +227,6 @@ const loginUser = async (req: any, res: any, forcedRole?: string) => {
       );
     }
 
-    if (user.role === 'farmer' && user.email === 'demo@agrimind.ai') {
-      const prodCheck = await queryGet<{ count: number }>('SELECT count(*) as count FROM marketplace_products WHERE farmer_id = ?', [user.id]);
-      if (prodCheck && prodCheck.count === 0) {
-        await seedFarmerProducts(user.id);
-      }
-    }
 
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
     res.json({ token, user: { id: user.id, name: user.name, email: user.email, role: user.role } });
