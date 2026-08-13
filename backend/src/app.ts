@@ -52,6 +52,7 @@ const upload = multer({
 });
 
 app.use('/uploads', express.static(UPLOAD_DIR));
+app.use('/api/uploads', express.static(UPLOAD_DIR));
 
 const diseaseInfoPath = fs.existsSync(path.join(__dirname, 'database', 'disease_info.json'))
   ? path.join(__dirname, 'database', 'disease_info.json')
@@ -2355,6 +2356,14 @@ const saveAndSendResult = async (prediction: any, farmerId: string, imageUrl: st
     }
   });
 };
+
+app.post('/api/upload', authenticateToken, upload.single('image'), (req: any, res) => {
+  if (!req.file) {
+    return res.status(400).json({ error: 'No image file uploaded.' });
+  }
+  const imageUrl = `/api/uploads/${req.file.filename}`;
+  res.json({ success: true, imageUrl });
+});
 
 // POST /api/plant-disease/predict
 app.post('/api/plant-disease/predict', authenticateToken, upload.single('image'), async (req: any, res) => {

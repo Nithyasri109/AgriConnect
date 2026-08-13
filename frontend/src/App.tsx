@@ -2475,6 +2475,42 @@ function AppContent() {
   const [editProductDesc, setEditProductDesc] = useState('');
   const [editProductImage, setEditProductImage] = useState('');
 
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const handleImageFileChange = async (e: React.ChangeEvent<HTMLInputElement>, isEdit: boolean) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setUploadingImage(true);
+    const formData = new FormData();
+    formData.append('image', file);
+
+    try {
+      const res = await fetch('/api/upload', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${localStorage.getItem('agrimind_token')}`
+        },
+        body: formData
+      });
+
+      if (res.ok) {
+        const data = await res.json();
+        if (isEdit) {
+          setEditProductImage(data.imageUrl);
+        } else {
+          setNewProductImage(data.imageUrl);
+        }
+      } else {
+        const err = await res.json();
+        alert(err.error || 'Failed to upload image');
+      }
+    } catch (err) {
+      alert('Error uploading image.');
+    } finally {
+      setUploadingImage(false);
+    }
+  };
+
   // Farmer My Products Search & Filters
   const [farmerSearch, setFarmerSearch] = useState('');
   const [farmerCategoryFilter, setFarmerCategoryFilter] = useState('');
@@ -6632,13 +6668,66 @@ function AppContent() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-505 mb-1">Product Image Link</label>
+                  <label className="block text-xs font-semibold text-slate-505 mb-1">Product Image</label>
+                  
+                  {newProductImage ? (
+                    <div className="relative border border-slate-200 rounded-2xl overflow-hidden group bg-slate-50 p-2 flex items-center justify-between">
+                      <div className="flex items-center gap-3 text-left">
+                        <img 
+                          src={newProductImage} 
+                          alt="Product Preview" 
+                          className="w-14 h-14 object-cover rounded-xl border border-slate-200" 
+                        />
+                        <div>
+                          <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold uppercase tracking-wider block w-max">Uploaded</span>
+                          <span className="text-xs text-slate-500 font-mono block truncate max-w-[200px] mt-1">{newProductImage}</span>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setNewProductImage('')}
+                        className="px-3 py-1.5 bg-red-50 text-red-600 font-bold rounded-xl text-xs hover:bg-red-500 hover:text-white transition-colors"
+                        title="Remove Image"
+                      >
+                        🗑️ Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="border-2 border-dashed border-slate-300 rounded-2xl p-6 text-center bg-slate-50 hover:bg-slate-100/50 transition-colors relative">
+                      {uploadingImage ? (
+                        <div className="flex flex-col items-center justify-center space-y-2">
+                          <div className="w-8 h-8 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                          <span className="text-xs text-slate-500 font-bold animate-pulse">Uploading product image...</span>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          <div className="text-2xl">📸</div>
+                          <div className="text-xs text-slate-500">
+                            Upload a product photo from your device gallery or capture it live using your camera.
+                          </div>
+                          <div className="flex gap-2 justify-center pt-2">
+                            <label className="px-4 py-2 bg-[#A8D5BA] text-[#34413A] hover:opacity-90 font-bold rounded-xl text-xs cursor-pointer transition-colors shadow-sm">
+                              📁 Upload / Take Photo
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => handleImageFileChange(e, false)}
+                              />
+                            </label>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Fallback Paste Input (for versatility) */}
                   <input
                     type="url"
-                    placeholder="https://images.unsplash.com/... (optional)"
+                    placeholder="Or paste an image URL (optional)"
                     value={newProductImage}
                     onChange={(e) => setNewProductImage(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-955/10 border border-slate-700/50 rounded-xl text-sm"
+                    className="w-full px-4 py-2.5 bg-slate-955/10 border border-slate-700/50 rounded-xl text-xs mt-3"
                   />
                 </div>
 
@@ -8023,12 +8112,66 @@ function AppContent() {
                 </div>
 
                 <div>
-                  <label className="block text-xs font-semibold text-slate-400 mb-1">Product Image Link</label>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1">Product Image</label>
+                  
+                  {editProductImage ? (
+                    <div className="relative border border-slate-200 rounded-2xl overflow-hidden group bg-slate-50 p-2 flex items-center justify-between">
+                      <div className="flex items-center gap-3 text-left">
+                        <img 
+                          src={editProductImage} 
+                          alt="Product Preview" 
+                          className="w-14 h-14 object-cover rounded-xl border border-slate-200" 
+                        />
+                        <div>
+                          <span className="text-[10px] bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-bold uppercase tracking-wider block w-max">Uploaded</span>
+                          <span className="text-xs text-slate-500 font-mono block truncate max-w-[200px] mt-1">{editProductImage}</span>
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setEditProductImage('')}
+                        className="px-3 py-1.5 bg-red-50 text-red-600 font-bold rounded-xl text-xs hover:bg-red-500 hover:text-white transition-colors"
+                        title="Remove Image"
+                      >
+                        🗑️ Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="border-2 border-dashed border-slate-300 rounded-2xl p-6 text-center bg-slate-50 hover:bg-slate-100/50 transition-colors relative">
+                      {uploadingImage ? (
+                        <div className="flex flex-col items-center justify-center space-y-2">
+                          <div className="w-8 h-8 border-3 border-emerald-500 border-t-transparent rounded-full animate-spin"></div>
+                          <span className="text-xs text-slate-500 font-bold animate-pulse">Uploading product image...</span>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          <div className="text-2xl">📸</div>
+                          <div className="text-xs text-slate-500">
+                            Upload a product photo from your device gallery or capture it live using your camera.
+                          </div>
+                          <div className="flex gap-2 justify-center pt-2">
+                            <label className="px-4 py-2 bg-[#A8D5BA] text-[#34413A] hover:opacity-90 font-bold rounded-xl text-xs cursor-pointer transition-colors shadow-sm">
+                              📁 Upload / Take Photo
+                              <input
+                                type="file"
+                                accept="image/*"
+                                className="hidden"
+                                onChange={(e) => handleImageFileChange(e, true)}
+                              />
+                            </label>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Fallback Paste Input */}
                   <input
                     type="url"
+                    placeholder="Or paste an image URL (optional)"
                     value={editProductImage}
                     onChange={(e) => setEditProductImage(e.target.value)}
-                    className={`w-full px-4 py-2 bg-slate-950/10 border border-slate-700/50 rounded-xl text-sm ${true ? 'text-slate-900 bg-white border-slate-200' : 'text-white'}`}
+                    className={`w-full px-4 py-2.5 bg-slate-950/10 border border-slate-700/50 rounded-xl text-xs mt-3 ${true ? 'text-slate-900 bg-white border-slate-200' : 'text-white'}`}
                   />
                 </div>
 
