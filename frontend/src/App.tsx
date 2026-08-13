@@ -5925,19 +5925,32 @@ function AppContent() {
                     </div>
                   </div>
                 </div>
-                <button
-                  onClick={() => setSelectedCropTips({
-                    name: t('rice'),
-                    season: t('monsoon'),
-                    soil: t('clayeyLoamy'),
-                    water: t('high'),
-                    duration: '90-120 days',
-                    tips: [t('riceTip1'), t('riceTip2'), t('riceTip3')]
-                  })}
-                  className="w-full py-2 bg-[#DFF2E1] text-[#34413A] font-bold rounded-xl text-xs hover:bg-[#A8D5BA] transition-colors"
-                >
-                  {t('viewGrowingTips')}
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCropTips({
+                      name: t('rice'),
+                      season: t('monsoon'),
+                      soil: t('clayeyLoamy'),
+                      water: t('high'),
+                      duration: '90-120 days',
+                      tips: [t('riceTip1'), t('riceTip2'), t('riceTip3')]
+                    })}
+                    className="flex-1 py-2 bg-[#DFF2E1] text-[#34413A] font-bold rounded-xl text-[10px] hover:bg-[#A8D5BA] transition-colors"
+                  >
+                    Growing Tips
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('plant-health');
+                      setSelectedPlantForHealth('Rice');
+                    }}
+                    className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-[10px] transition-colors"
+                  >
+                    Check Health
+                  </button>
+                </div>
               </div>
 
               {/* Maize Card */}
@@ -5964,19 +5977,32 @@ function AppContent() {
                     </div>
                   </div>
                 </div>
-                <button
-                  onClick={() => setSelectedCropTips({
-                    name: t('maize'),
-                    season: t('monsoon'),
-                    soil: t('wellDrainedLoamy'),
-                    water: t('medium'),
-                    duration: '80-100 days',
-                    tips: [t('maizeTip1'), t('maizeTip2'), t('maizeTip3')]
-                  })}
-                  className="w-full py-2 bg-[#DFF2E1] text-[#34413A] font-bold rounded-xl text-xs hover:bg-[#A8D5BA] transition-colors"
-                >
-                  {t('viewGrowingTips')}
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCropTips({
+                      name: t('maize'),
+                      season: t('monsoon'),
+                      soil: t('wellDrainedLoamy'),
+                      water: t('medium'),
+                      duration: '80-100 days',
+                      tips: [t('maizeTip1'), t('maizeTip2'), t('maizeTip3')]
+                    })}
+                    className="flex-1 py-2 bg-[#DFF2E1] text-[#34413A] font-bold rounded-xl text-[10px] hover:bg-[#A8D5BA] transition-colors"
+                  >
+                    Growing Tips
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('plant-health');
+                      setSelectedPlantForHealth('Maize');
+                    }}
+                    className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-[10px] transition-colors"
+                  >
+                    Check Health
+                  </button>
+                </div>
               </div>
 
               {/* Groundnut Card */}
@@ -6003,19 +6029,32 @@ function AppContent() {
                     </div>
                   </div>
                 </div>
-                <button
-                  onClick={() => setSelectedCropTips({
-                    name: t('groundnut'),
-                    season: t('monsoon'),
-                    soil: t('sandyLoam'),
-                    water: t('medium'),
-                    duration: '100-120 days',
-                    tips: [t('groundnutTip1'), t('groundnutTip2'), t('groundnutTip3')]
-                  })}
-                  className="w-full py-2 bg-[#DFF2E1] text-[#34413A] font-bold rounded-xl text-xs hover:bg-[#A8D5BA] transition-colors"
-                >
-                  {t('viewGrowingTips')}
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCropTips({
+                      name: t('groundnut'),
+                      season: t('monsoon'),
+                      soil: t('sandyLoam'),
+                      water: t('medium'),
+                      duration: '100-120 days',
+                      tips: [t('groundnutTip1'), t('groundnutTip2'), t('groundnutTip3')]
+                    })}
+                    className="flex-1 py-2 bg-[#DFF2E1] text-[#34413A] font-bold rounded-xl text-[10px] hover:bg-[#A8D5BA] transition-colors"
+                  >
+                    Growing Tips
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('plant-health');
+                      setSelectedPlantForHealth('Groundnut');
+                    }}
+                    className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-[10px] transition-colors"
+                  >
+                    Check Health
+                  </button>
+                </div>
               </div>
 
               {/* Soybean Card */}
@@ -6042,19 +6081,32 @@ function AppContent() {
                     </div>
                   </div>
                 </div>
-                <button
-                  onClick={() => setSelectedCropTips({
-                    name: t('soybean'),
-                    season: t('monsoon'),
-                    soil: t('fertileWellDrained'),
-                    water: t('medium'),
-                    duration: '90-110 days',
-                    tips: [t('soybeanTip1'), t('soybeanTip2'), t('soybeanTip3')]
-                  })}
-                  className="w-full py-2 bg-[#DFF2E1] text-[#34413A] font-bold rounded-xl text-xs hover:bg-[#A8D5BA] transition-colors"
-                >
-                  {t('viewGrowingTips')}
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCropTips({
+                      name: t('soybean'),
+                      season: t('monsoon'),
+                      soil: t('fertileWellDrained'),
+                      water: t('medium'),
+                      duration: '90-110 days',
+                      tips: [t('soybeanTip1'), t('soybeanTip2'), t('soybeanTip3')]
+                    })}
+                    className="flex-1 py-2 bg-[#DFF2E1] text-[#34413A] font-bold rounded-xl text-[10px] hover:bg-[#A8D5BA] transition-colors"
+                  >
+                    Growing Tips
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('plant-health');
+                      setSelectedPlantForHealth('Soybean');
+                    }}
+                    className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-[10px] transition-colors"
+                  >
+                    Check Health
+                  </button>
+                </div>
               </div>
 
               {/* Cotton Card */}
@@ -6081,19 +6133,32 @@ function AppContent() {
                     </div>
                   </div>
                 </div>
-                <button
-                  onClick={() => setSelectedCropTips({
-                    name: t('cotton'),
-                    season: t('monsoon'),
-                    soil: t('deepClayeyBlack'),
-                    water: t('medium'),
-                    duration: '150-180 days',
-                    tips: [t('cottonTip1'), t('cottonTip2'), t('cottonTip3')]
-                  })}
-                  className="w-full py-2 bg-[#DFF2E1] text-[#34413A] font-bold rounded-xl text-xs hover:bg-[#A8D5BA] transition-colors"
-                >
-                  {t('viewGrowingTips')}
-                </button>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCropTips({
+                      name: t('cotton'),
+                      season: t('monsoon'),
+                      soil: t('deepClayeyBlack'),
+                      water: t('medium'),
+                      duration: '150-180 days',
+                      tips: [t('cottonTip1'), t('cottonTip2'), t('cottonTip3')]
+                    })}
+                    className="flex-1 py-2 bg-[#DFF2E1] text-[#34413A] font-bold rounded-xl text-[10px] hover:bg-[#A8D5BA] transition-colors"
+                  >
+                    Growing Tips
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('plant-health');
+                      setSelectedPlantForHealth('Cotton');
+                    }}
+                    className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-[10px] transition-colors"
+                  >
+                    Check Health
+                  </button>
+                </div>
               </div>
 
               {/* Tomato Card */}
@@ -6120,173 +6185,105 @@ function AppContent() {
                     </div>
                   </div>
                 </div>
-                <button
-                  onClick={() => setActiveTab('plant-health')}
-                  className="w-full py-2 bg-[#FFD6BA] text-[#34413A] font-bold rounded-xl text-xs hover:opacity-90 transition-colors"
-                >
-                  {t('checkPlantHealth')}
-                </button>
-              </div>
-            </div>
-
-            {/* 4. QUICK ACTIONS SECTION */}
-            <h3 className="text-xl font-bold font-outfit text-[#34413A] mb-4">{t('quickActions')}</h3>
-            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
-              <div 
-                onClick={() => setActiveTab('soil-analysis')}
-                className="bg-white border-2 border-[#DFF2E1] hover:border-[#A8D5BA] rounded-3xl p-5 cursor-pointer hover:shadow-[0_8px_20px_rgba(168,213,186,0.08)] transition-all group"
-              >
-                <div className="w-10 h-10 rounded-xl bg-[#DFF2E1] flex items-center justify-center text-[#34413A] mb-4 group-hover:scale-105 transition-transform">
-                  <Database className="w-5 h-5" />
-                </div>
-                <h4 className="font-bold text-sm text-[#34413A] mb-1">{t('analyzeSoil')}</h4>
-                <p className="text-[10px] text-slate-500">{t('analyzeSoilDesc')}</p>
-              </div>
-
-              <div 
-                onClick={() => setActiveTab('plant-health')}
-                className="bg-white border-2 border-[#DFF2E1] hover:border-[#A8D5BA] rounded-3xl p-5 cursor-pointer hover:shadow-[0_8px_20px_rgba(168,213,186,0.08)] transition-all group"
-              >
-                <div className="w-10 h-10 rounded-xl bg-[#FFF8E7] flex items-center justify-center text-[#34413A] mb-4 group-hover:scale-105 transition-transform">
-                  <Camera className="w-5 h-5" />
-                </div>
-                <h4 className="font-bold text-sm text-[#34413A] mb-1">{t('detectDisease')}</h4>
-                <p className="text-[10px] text-slate-500">{t('detectDiseaseDesc')}</p>
-              </div>
-
-              <div 
-                onClick={() => setActiveTab('inventory')}
-                className="bg-white border-2 border-[#DFF2E1] hover:border-[#A8D5BA] rounded-3xl p-5 cursor-pointer hover:shadow-[0_8px_20px_rgba(168,213,186,0.08)] transition-all group"
-              >
-                <div className="w-10 h-10 rounded-xl bg-[#C6DDF5]/40 flex items-center justify-center text-[#34413A] mb-4 group-hover:scale-105 transition-transform">
-                  <Store className="w-5 h-5" />
-                </div>
-                <h4 className="font-bold text-sm text-[#34413A] mb-1">{t('myProducts')}</h4>
-                <p className="text-[10px] text-slate-500">{t('myProductsDesc')}</p>
-              </div>
-
-              <div 
-                onClick={() => setActiveTab('orders')}
-                className="bg-white border-2 border-[#DFF2E1] hover:border-[#A8D5BA] rounded-3xl p-5 cursor-pointer hover:shadow-[0_8px_20px_rgba(168,213,186,0.08)] transition-all group"
-              >
-                <div className="w-10 h-10 rounded-xl bg-orange-100/50 flex items-center justify-center text-[#34413A] mb-4 group-hover:scale-105 transition-transform">
-                  <ShoppingBag className="w-5 h-5" />
-                </div>
-                <h4 className="font-bold text-sm text-[#34413A] mb-1">{t('trackOrders')}</h4>
-                <p className="text-[10px] text-slate-500">{t('trackOrdersDesc')}</p>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-              {/* 5. SOIL & PLANT HEALTH SUMMARY */}
-              <div className="lg:col-span-2 space-y-6">
-                <div className="bg-white border border-slate-100 rounded-3xl p-6">
-                  <h3 className="text-lg font-bold font-outfit text-[#34413A] mb-4 flex items-center gap-2">
-                    🛡️ {t('farmHealthOverview')}
-                  </h3>
-                  <div className="space-y-4">
-                    {/* Soil Status */}
-                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex justify-between items-center text-xs">
-                      <div>
-                        <span className="text-[10px] font-bold text-slate-400 block uppercase">{t('soilStatus')}</span>
-                        {advisorHistory.length > 0 ? (
-                          <strong className="text-slate-800 text-sm">
-                            Last test: {advisorHistory[0].location || 'Default Field'} (pH {advisorHistory[0].ph})
-                          </strong>
-                        ) : (
-                          <span className="text-slate-500">{t('notCheckedYet')}</span>
-                        )}
-                      </div>
-                      <button 
-                        onClick={() => setActiveTab('soil-analysis')}
-                        className="px-3.5 py-1.5 bg-[#DFF2E1] text-[#34413A] hover:bg-[#A8D5BA] font-bold rounded-xl text-[10px] transition-colors"
-                      >
-                        {t('startSoilAnalysis')}
-                      </button>
-                    </div>
-
-                    {/* Plant Health */}
-                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex justify-between items-center text-xs">
-                      <div>
-                        <span className="text-[10px] font-bold text-slate-400 block uppercase">{t('plantDiseaseScan')}</span>
-                        <span className="text-slate-500">{t('noRecentScan')}</span>
-                      </div>
-                      <button 
-                        onClick={() => setActiveTab('plant-health')}
-                        className="px-3.5 py-1.5 bg-[#FFD6BA] text-[#34413A] hover:opacity-90 font-bold rounded-xl text-[10px] transition-colors"
-                      >
-                        {t('scanPlant')}
-                      </button>
-                    </div>
-
-                    {/* Water Reminder */}
-                    <div className="p-4 rounded-2xl bg-slate-50 border border-slate-100 flex justify-between items-center text-xs">
-                      <div>
-                        <span className="text-[10px] font-bold text-slate-400 block uppercase">{t('waterReminder')}</span>
-                        <span className="text-slate-500">{t('waterNeedsDepend')}</span>
-                      </div>
-                      <button 
-                        onClick={() => { window.scrollTo({ top: 120, behavior: 'smooth' }); }}
-                        className="px-3.5 py-1.5 bg-[#C6DDF5]/40 text-[#34413A] hover:bg-[#C6DDF5]/70 font-bold rounded-xl text-[10px] transition-colors"
-                      >
-                        {t('viewCropGuide')}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Right Column: 6. Farming Store & 7. Today's Reminders */}
-              <div className="space-y-6">
-                {/* 6. Farming Store Shortcut */}
-                <div className="bg-white border border-slate-100 rounded-3xl p-6">
-                  <h3 className="text-base font-bold font-outfit text-[#34413A] mb-4">{t('farmingStore')}</h3>
-                  <div className="space-y-3 text-xs">
-                    <div className="p-3 bg-[#DFF2E1]/20 border border-[#A8D5BA]/20 rounded-xl flex justify-between items-center">
-                      <div>
-                        <span className="font-bold block text-[#34413A]">{t('products')}</span>
-                        <span className="text-[10px] text-slate-500">{t('manageMarketplace')}</span>
-                      </div>
-                      <button 
-                        onClick={() => setActiveTab('inventory')}
-                        className="px-3 py-1 bg-[#DFF2E1] hover:bg-[#A8D5BA] text-[#34413A] font-bold rounded-lg text-[10px]"
-                      >
-                        {t('openProducts')}
-                      </button>
-                    </div>
-
-                    <div className="p-3 bg-[#FFF8E7] border border-[#FFD6BA]/25 rounded-xl flex justify-between items-center">
-                      <div>
-                        <span className="font-bold block text-[#34413A]">{t('orders')}</span>
-                        <span className="text-[10px] text-slate-500">{t('recentCustomerEscrow')}</span>
-                      </div>
-                      <button 
-                        onClick={() => setActiveTab('orders')}
-                        className="px-3 py-1 bg-[#FFD6BA] hover:opacity-90 text-[#34413A] font-bold rounded-lg text-[10px]"
-                      >
-                        {t('viewOrders')}
-                      </button>
-                    </div>
-                  </div>
-                </div>
-
-                {/* 7. Notifications / Reminders */}
-                <div className="bg-white border border-slate-100 rounded-3xl p-6">
-                  <h3 className="text-base font-bold font-outfit text-[#34413A] mb-3 flex items-center gap-1.5">
-                    🔔 {t('todaysReminders')}
-                  </h3>
-                  <ul className="list-disc pl-5 space-y-2 text-xs text-[#6B756E] font-medium mb-4">
-                    <li>{t('checkSoilMoistureRemind')}</li>
-                    <li>{t('useDiseaseDetection')}</li>
-                    <li>{t('chooseCropsWater')}</li>
-                  </ul>
+                <div className="flex gap-2">
                   <button
-                    onClick={() => setActiveTab('notifications')}
-                    className="w-full py-2 bg-slate-900 border border-slate-800 text-white rounded-xl text-xs font-bold text-center block"
+                    type="button"
+                    onClick={() => setSelectedCropTips({
+                      name: t('tomato'),
+                      season: t('monsoon'),
+                      soil: t('fertileWellDrained') || 'Fertile Well-Drained',
+                      water: t('medium'),
+                      duration: '70-90 days',
+                      tips: ['Ensure staking/support for optimal airflow.', 'Water at base to keep foliage dry.', 'Watch for early leaf yellowing or blight spots.']
+                    })}
+                    className="flex-1 py-2 bg-[#DFF2E1] text-[#34413A] font-bold rounded-xl text-[10px] hover:bg-[#A8D5BA] transition-colors"
                   >
-                    {t('viewNotifications')}
+                    Growing Tips
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('plant-health');
+                      setSelectedPlantForHealth('Tomato');
+                    }}
+                    className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-[10px] transition-colors"
+                  >
+                    Check Health
                   </button>
                 </div>
+              </div>
+
+              {/* Potato Card */}
+              <div className="bg-white border border-[#DFF2E1] rounded-3xl p-5 hover:shadow-[0_8px_30px_rgba(168,213,186,0.12)] transition-all flex flex-col justify-between">
+                <div>
+                  <div className="flex justify-between items-start gap-2 mb-3">
+                    <span className="text-2xl">🥔</span>
+                    <span className="text-[10px] font-bold px-2 py-0.5 rounded bg-blue-50 text-blue-700 border border-blue-100 uppercase">
+                      {t('suitable')}
+                    </span>
+                  </div>
+                  <h4 className="text-lg font-bold text-[#34413A] mb-1">{t('potato') || 'Potato'}</h4>
+                  <p className="text-xs text-[#6B756E] leading-relaxed mb-4 font-medium">
+                    Grows well in sandy-loam soils with moderate rainfall and cool to moderate temperatures.
+                  </p>
+                  <div className="space-y-1 text-[11px] text-slate-500 font-semibold pb-4">
+                    <div className="flex justify-between">
+                      <span>{t('duration')}:</span>
+                      <strong className="text-slate-800">90-120 days</strong>
+                    </div>
+                    <div className="flex justify-between">
+                      <span>{t('waterNeed')}:</span>
+                      <strong className="text-[#34413A]">{t('medium')}</strong>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setSelectedCropTips({
+                      name: 'Potato',
+                      season: t('monsoon'),
+                      soil: t('sandyLoam') || 'Sandy Loam',
+                      water: t('medium'),
+                      duration: '90-120 days',
+                      tips: ['Ensure good soil drainage to prevent tuber rot.', 'Use disease-free certified seed tubers.', 'Apply balanced NPK and watch for early/late blight symptoms.']
+                    })}
+                    className="flex-1 py-2 bg-[#DFF2E1] text-[#34413A] font-bold rounded-xl text-[10px] hover:bg-[#A8D5BA] transition-colors"
+                  >
+                    Growing Tips
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setActiveTab('plant-health');
+                      setSelectedPlantForHealth('Potato');
+                    }}
+                    className="flex-1 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-[10px] transition-colors"
+                  >
+                    Check Health
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Today's Reminders Section */}
+            <div className="max-w-2xl mx-auto bg-white border border-slate-150 rounded-3xl p-6 shadow-sm mb-8">
+              <h3 className="text-lg font-bold font-outfit text-[#34413A] mb-3 flex items-center justify-center gap-2">
+                🔔 {t('todaysReminders')}
+              </h3>
+              <ul className="list-disc pl-6 space-y-2 text-xs text-[#6B756E] font-medium mb-5 text-left max-w-md mx-auto">
+                <li>{t('checkSoilMoistureRemind')}</li>
+                <li>{t('useDiseaseDetection')}</li>
+                <li>{t('chooseCropsWater')}</li>
+              </ul>
+              <div className="flex justify-center">
+                <button
+                  type="button"
+                  onClick={() => setActiveTab('notifications')}
+                  className="px-6 py-2.5 bg-[#34413A] text-white hover:bg-slate-800 rounded-xl text-xs font-bold transition-all shadow-md"
+                >
+                  {t('viewNotifications')}
+                </button>
               </div>
             </div>
 
