@@ -146,7 +146,6 @@ const registerUser = async (req: any, res: any, forcedRole?: string) => {
         ['fh_' + Date.now(), farmId, 80.0, 80.0, 80.0, 80.0, 80.0, 80.0, 80.0, 80.0]);
       await queryRun('INSERT INTO sustainability_scores (id, farm_id, score, water_efficiency, soil_health, resource_conservation, crop_diversity) VALUES (?, ?, ?, ?, ?, ?, ?)',
         ['sust_' + Date.now(), farmId, 75.0, 75.0, 75.0, 75.0, 75.0]);
-      await seedFarmerProducts(id);
     }
 
     if (userRole === 'delivery') {
@@ -270,7 +269,7 @@ const loginUser = async (req: any, res: any, forcedRole?: string) => {
       );
     }
 
-    if (user.role === 'farmer') {
+    if (user.role === 'farmer' && user.email === 'demo@agrimind.ai') {
       const prodCheck = await queryGet<{ count: number }>('SELECT count(*) as count FROM marketplace_products WHERE farmer_id = ?', [user.id]);
       if (prodCheck && prodCheck.count === 0) {
         await seedFarmerProducts(user.id);
