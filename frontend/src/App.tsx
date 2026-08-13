@@ -2511,6 +2511,83 @@ function AppContent() {
     }
   };
 
+  // Product Camera States & Handlers
+  const [productCameraActive, setProductCameraActive] = useState(false);
+  const [productCameraStream, setProductCameraStream] = useState<MediaStream | null>(null);
+  const [productCameraIsEdit, setProductCameraIsEdit] = useState(false);
+  const productVideoRef = React.useRef<HTMLVideoElement | null>(null);
+
+  const startProductCamera = async (isEdit: boolean) => {
+    setProductCameraIsEdit(isEdit);
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+      setProductCameraStream(stream);
+      setProductCameraActive(true);
+    } catch (err) {
+      alert("Unable to access camera: " + err);
+    }
+  };
+
+  const stopProductCamera = () => {
+    if (productCameraStream) {
+      productCameraStream.getTracks().forEach(t => t.stop());
+      setProductCameraStream(null);
+    }
+    setProductCameraActive(false);
+  };
+
+  const captureProductPhoto = () => {
+    if (productVideoRef.current) {
+      const canvas = document.createElement('canvas');
+      canvas.width = productVideoRef.current.videoWidth || 640;
+      canvas.height = productVideoRef.current.videoHeight || 480;
+      const ctx = canvas.getContext('2d');
+      if (ctx) {
+        ctx.drawImage(productVideoRef.current, 0, 0, canvas.width, canvas.height);
+        canvas.toBlob(async (blob) => {
+          if (blob) {
+            const file = new File([blob], "captured_product.jpg", { type: "image/jpeg" });
+            
+            setUploadingImage(true);
+            const formData = new FormData();
+            formData.append('image', file);
+            try {
+              const res = await fetch('/api/upload', {
+                method: 'POST',
+                headers: {
+                  'Authorization': `Bearer ${localStorage.getItem('agrimind_token')}`
+                },
+                body: formData
+              });
+              if (res.ok) {
+                const data = await res.json();
+                if (productCameraIsEdit) {
+                  setEditProductImage(data.imageUrl);
+                } else {
+                  setNewProductImage(data.imageUrl);
+                }
+                stopProductCamera();
+              } else {
+                alert("Failed to upload captured photo.");
+              }
+            } catch (e) {
+              alert("Error uploading captured photo.");
+            } finally {
+              setUploadingImage(false);
+            }
+          }
+        }, 'image/jpeg');
+      }
+    }
+  };
+
+  useEffect(() => {
+    if (productCameraActive && productCameraStream && productVideoRef.current) {
+      productVideoRef.current.srcObject = productCameraStream;
+      productVideoRef.current.play().catch((err: any) => console.error("Error playing video:", err));
+    }
+  }, [productCameraActive, productCameraStream]);
+
   // Farmer My Products Search & Filters
   const [farmerSearch, setFarmerSearch] = useState('');
   const [farmerCategoryFilter, setFarmerCategoryFilter] = useState('');
@@ -6705,9 +6782,9 @@ function AppContent() {
                           <div className="text-xs text-slate-500">
                             Upload a product photo from your device gallery or capture it live using your camera.
                           </div>
-                          <div className="flex gap-2 justify-center pt-2">
-                            <label className="px-4 py-2 bg-[#A8D5BA] text-[#34413A] hover:opacity-90 font-bold rounded-xl text-xs cursor-pointer transition-colors shadow-sm">
-                              📁 Upload / Take Photo
+                          <div className="flex gap-3 justify-center pt-2">
+                            <label className="px-4 py-2 bg-[#A8D5BA] text-[#34413A] hover:opacity-90 font-bold rounded-xl text-xs cursor-pointer transition-colors shadow-sm flex items-center gap-1">
+                              📁 Upload Photo
                               <input
                                 type="file"
                                 accept="image/*"
@@ -6715,6 +6792,13 @@ function AppContent() {
                                 onChange={(e) => handleImageFileChange(e, false)}
                               />
                             </label>
+                            <button
+                              type="button"
+                              onClick={() => startProductCamera(false)}
+                              className="px-4 py-2 bg-emerald-500 text-slate-950 hover:bg-emerald-400 font-bold rounded-xl text-xs transition-colors shadow-sm flex items-center gap-1"
+                            >
+                              📷 Take Photo
+                            </button>
                           </div>
                         </div>
                       )}
@@ -7969,6 +8053,40 @@ function AppContent() {
             </div>
           </div>
         )}
+        {/* Product Camera Capture Modal */}
+        {productCameraActive && (
+          <div className="fixed inset-0 bg-slate-950/90 backdrop-blur-md z-50 flex items-center justify-center p-4">
+            <div className="w-full max-w-lg bg-slate-900 border border-slate-800 rounded-3xl overflow-hidden shadow-2xl p-6 text-center space-y-4">
+              <h3 className="text-sm font-bold text-slate-300 font-outfit uppercase tracking-wider">📷 Capture Product Photo</h3>
+              
+              <div className="relative aspect-video w-full rounded-2xl overflow-hidden bg-slate-955 border border-slate-800 flex items-center justify-center">
+                <video 
+                  ref={productVideoRef} 
+                  playsInline 
+                  autoPlay 
+                  className="w-full h-full object-cover transform scale-x-[-1]"
+                />
+              </div>
+
+              <div className="flex gap-4 justify-center">
+                <button
+                  type="button"
+                  onClick={captureProductPhoto}
+                  className="px-6 py-3 bg-emerald-500 hover:bg-emerald-400 text-slate-955 font-bold rounded-xl text-xs flex items-center gap-1.5 transition-all shadow-md"
+                >
+                  ⚡ Capture & Upload
+                </button>
+                <button
+                  type="button"
+                  onClick={stopProductCamera}
+                  className="px-6 py-3 bg-slate-955/20 border border-slate-700/50 text-slate-400 hover:text-white rounded-xl text-xs transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         {/* Edit Product Modal */}
         {editingProduct && (
           <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
@@ -8149,9 +8267,9 @@ function AppContent() {
                           <div className="text-xs text-slate-500">
                             Upload a product photo from your device gallery or capture it live using your camera.
                           </div>
-                          <div className="flex gap-2 justify-center pt-2">
-                            <label className="px-4 py-2 bg-[#A8D5BA] text-[#34413A] hover:opacity-90 font-bold rounded-xl text-xs cursor-pointer transition-colors shadow-sm">
-                              📁 Upload / Take Photo
+                          <div className="flex gap-3 justify-center pt-2">
+                            <label className="px-4 py-2 bg-[#A8D5BA] text-[#34413A] hover:opacity-90 font-bold rounded-xl text-xs cursor-pointer transition-colors shadow-sm flex items-center gap-1">
+                              📁 Upload Photo
                               <input
                                 type="file"
                                 accept="image/*"
@@ -8159,6 +8277,13 @@ function AppContent() {
                                 onChange={(e) => handleImageFileChange(e, true)}
                               />
                             </label>
+                            <button
+                              type="button"
+                              onClick={() => startProductCamera(true)}
+                              className="px-4 py-2 bg-emerald-500 text-slate-950 hover:bg-emerald-400 font-bold rounded-xl text-xs transition-colors shadow-sm flex items-center gap-1"
+                            >
+                              📷 Take Photo
+                            </button>
                           </div>
                         </div>
                       )}
