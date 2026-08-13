@@ -5441,6 +5441,316 @@ function AppContent() {
             </div>
           </div>
         )}
+
+        {/* Cancellation Reason Modal */}
+        {cancellationOrder && (
+          <div className="fixed inset-0 bg-slate-955/25 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className={`${cardClass} w-full max-w-md rounded-3xl overflow-hidden shadow-2xl flex flex-col`}>
+              <div className={`p-6 border-b ${borderClass} flex justify-between items-center`}>
+                <h3 className={`text-xl font-bold font-outfit ${textTitle}`}>Cancel Order #{cancellationOrder.id}</h3>
+                <button 
+                  onClick={() => setCancellationOrder(null)} 
+                  className="text-slate-400 hover:text-white text-sm"
+                >
+                  Cancel
+                </button>
+              </div>
+
+              <form onSubmit={handleCancelOrderSubmit} className="p-6 space-y-4">
+                <p className="text-xs text-slate-405">
+                  Are you sure you want to cancel this order? Please select a reason below to confirm.
+                </p>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-405 mb-1 text-slate-400">Reason for Cancellation</label>
+                  <select
+                    value={cancellationReason}
+                    onChange={(e) => setCancellationReason(e.target.value)}
+                    className="w-full px-4 py-2.5 border rounded-xl text-sm text-white bg-slate-900 border-slate-800"
+                  >
+                    <option value="Ordered by mistake">Ordered by mistake</option>
+                    <option value="Found another product">Found another product</option>
+                    <option value="Changed my mind">Changed my mind</option>
+                    <option value="Delivery taking too long">Delivery taking too long</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                {cancellationReason === 'Other' && (
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-400 mb-1">Specify Reason</label>
+                    <textarea
+                      required
+                      rows={2}
+                      value={cancellationReasonOther}
+                      onChange={(e) => setCancellationReasonOther(e.target.value)}
+                      placeholder="Please specify why you are cancelling..."
+                      className="w-full px-4 py-2 bg-slate-900 border border-slate-800 rounded-xl text-sm resize-none text-white"
+                    />
+                  </div>
+                )}
+
+                <div className="pt-2 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setCancellationOrder(null)}
+                    className="flex-1 py-3 border border-slate-700/50 text-slate-400 font-bold rounded-xl text-xs hover:bg-slate-900 transition-colors"
+                  >
+                    NO, KEEP ORDER
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 py-3 bg-red-500 text-slate-950 hover:bg-red-400 font-bold rounded-xl text-xs transition-colors"
+                  >
+                    YES, CANCEL ORDER
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Dispute Resolution Modal */}
+        {disputeModalOrder && (
+          <div className="fixed inset-0 bg-slate-950/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className={`${cardClass} w-full max-w-md rounded-3xl overflow-hidden shadow-2xl flex flex-col`}>
+              <div className={`p-6 border-b ${borderClass} flex justify-between items-center`}>
+                <h3 className={`text-xl font-bold font-outfit ${textTitle}`}>Report Problem (Dispute)</h3>
+                <button 
+                  onClick={() => setDisputeModalOrder(null)} 
+                  className="text-slate-400 hover:text-white text-sm"
+                >
+                  Cancel
+                </button>
+              </div>
+
+              <form onSubmit={handleDisputeOrderSubmit} className="p-6 space-y-4">
+                <p className="text-xs text-slate-405">
+                  If the farmer failed to deliver, sent incorrect produce, or wrong quantity, you can lodge a formal claim. This halts payment release.
+                </p>
+
+                <div>
+                  <label className="block text-xs font-semibold text-slate-400 mb-1">Reason for Dispute</label>
+                  <select
+                    value={disputeReason}
+                    onChange={(e) => setDisputeReason(e.target.value)}
+                    className="w-full px-4 py-2.5 border rounded-xl text-sm text-white bg-slate-900 border-slate-800"
+                  >
+                    <option value="Order not received">Order not received</option>
+                    <option value="Poor produce quality">Poor produce quality</option>
+                    <option value="Incorrect weight/quantity">Incorrect weight/quantity</option>
+                    <option value="Incorrect items received">Incorrect items received</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                {disputeReason === 'Other' && (
+                  <div>
+                    <label className="block text-xs font-semibold text-slate-400 mb-1">Specify Details</label>
+                    <textarea
+                      required
+                      rows={2}
+                      value={disputeReasonOther}
+                      onChange={(e) => setDisputeReasonOther(e.target.value)}
+                      placeholder="Please clarify the problem details..."
+                      className="w-full px-4 py-2 bg-slate-900 border border-slate-800 rounded-xl text-sm resize-none text-white"
+                    />
+                  </div>
+                )}
+
+                <div className="pt-2 flex gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setDisputeModalOrder(null)}
+                    className="flex-1 py-3 border border-slate-700/50 text-slate-400 font-bold rounded-xl text-xs hover:bg-slate-900 transition-colors"
+                  >
+                    Discard
+                  </button>
+                  <button
+                    type="submit"
+                    className="flex-1 py-3 bg-[#FF9F1C] text-slate-955 font-bold rounded-xl text-xs transition-colors"
+                  >
+                    Submit Dispute
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        )}
+
+        {/* Delivery Live Tracking Modal Panel */}
+        {trackingOrder && (
+          <div className="fixed inset-0 bg-slate-950/85 backdrop-blur-sm z-50 flex items-center justify-center p-4 md:p-6 overflow-y-auto">
+            <div className={`${cardClass} w-full max-w-4xl rounded-3xl overflow-hidden shadow-2xl flex flex-col md:flex-row h-[90vh] md:h-[80vh]`}>
+              
+              {/* Left Side: Mock Map Container */}
+              <div className="flex-1 bg-slate-900 border-r border-slate-800 relative flex flex-col justify-between overflow-hidden min-h-[300px] md:min-h-0">
+                <div className="flex-1 w-full h-full relative">
+                  <GoogleMapComponent
+                    pickup={{ lat: 10.9970, lng: 76.9616, name: trackingOrder.farm_name || 'Green Valley Farm' }}
+                    customer={{ lat: trackingOrder.latitude || 11.0168, lng: trackingOrder.longitude || 76.9558, name: trackingOrder.shipping_name || 'Customer' }}
+                    delivery={liveTrackingInfo?.latestLocation ? { lat: liveTrackingInfo.latestLocation.latitude, lng: liveTrackingInfo.latestLocation.longitude, name: 'Arun' } : { lat: 10.9970, lng: 76.9616, name: 'Arun' }}
+                  />
+                </div>
+              </div>
+
+              {/* Right Side: Tracking Details & Timeline */}
+              <div className="w-full md:w-[400px] p-6 flex flex-col justify-between overflow-y-auto h-full text-slate-205">
+                <div>
+                  <div className="flex justify-between items-center mb-6">
+                    <div>
+                      <span className="text-[10px] text-slate-500 font-mono tracking-wider block">ORDER ID: {trackingOrder.id}</span>
+                      <h3 className={`text-xl font-bold font-outfit ${textTitle}`}>Track Your Order</h3>
+                    </div>
+                    <button
+                      onClick={stopTrackingPolling}
+                      className="text-slate-450 hover:text-red-400 text-sm font-semibold"
+                    >
+                      Close Tracker
+                    </button>
+                  </div>
+
+                  {/* Proximity Alert Banner */}
+                  {liveTrackingInfo?.delivery?.remaining_distance_km !== undefined && 
+                   liveTrackingInfo?.delivery?.remaining_distance_km !== null && 
+                   liveTrackingInfo.delivery.remaining_distance_km <= 0.5 && 
+                   liveTrackingInfo.delivery.remaining_distance_km > 0 && (
+                    <div className="bg-gradient-to-r from-red-600/35 to-rose-600/20 border border-red-500/30 p-4 rounded-2xl mb-6 pulse-green">
+                      <h4 className="text-sm font-extrabold text-white flex items-center gap-1.5 font-outfit">
+                        <AlertTriangle className="w-4 h-4 text-red-500" /> YOUR ORDER IS NEARBY!
+                      </h4>
+                      <p className="text-[11px] text-slate-250 mt-1 leading-relaxed font-normal">
+                        The delivery agent is approximately **{Math.round(liveTrackingInfo.delivery.remaining_distance_km * 1000)} meters** away. Please keep your phone handy!
+                      </p>
+                    </div>
+                  )}
+
+                  {/* Live Status Indicators */}
+                  <div className={`${innerBoxClass} p-4 rounded-2xl space-y-3 mb-6`}>
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-full overflow-hidden border border-slate-700 bg-slate-850 flex items-center justify-center">
+                        <img 
+                          src={liveTrackingInfo?.delivery?.avatar_url || "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&q=80&w=150"} 
+                          alt="Avatar" 
+                          className="w-full h-full object-cover" 
+                        />
+                      </div>
+                      <div>
+                        <span className="text-[10px] text-slate-500 block">DELIVERY PARTNER:</span>
+                        <h4 className="text-sm font-bold text-white">{liveTrackingInfo?.delivery?.partner_name || 'Arun'}</h4>
+                        <span className="text-[10px] text-slate-455 block">{liveTrackingInfo?.delivery?.vehicle_type} &bull; {liveTrackingInfo?.delivery?.vehicle_number}</span>
+                        <span className="mt-1.5 inline-block text-[10px] bg-emerald-500/20 text-emerald-400 border border-emerald-500/35 px-2 py-0.5 rounded-lg font-bold font-mono">
+                          {(() => {
+                            const status = liveTrackingInfo?.delivery?.status || 'ASSIGNED';
+                            if (status === 'ASSIGNED') return 'Delivery person assigned';
+                            if (status === 'ACCEPTED') return 'Delivery accepted - Preparing';
+                            if (status === 'GOING_TO_PICKUP') return 'Courier heading to pickup';
+                            if (status === 'PICKED_UP') return 'Order picked up at farm';
+                            if (status === 'OUT_FOR_DELIVERY') return 'Courier is on the way to you';
+                            if (status === 'ARRIVED') return 'Courier has arrived';
+                            if (status === 'DELIVERED') return 'Order successfully completed';
+                            return status;
+                          })()}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className={`grid grid-cols-2 gap-4 border-t ${borderClass} pt-3 text-xs`}>
+                      <div>
+                        <span className="text-slate-500 block">Distance Remaining:</span>
+                        <span className="text-sm font-bold text-white font-outfit">
+                          {liveTrackingInfo?.delivery?.remaining_distance_km !== undefined && liveTrackingInfo?.delivery?.remaining_distance_km !== null 
+                            ? `${liveTrackingInfo.delivery.remaining_distance_km} km` 
+                            : '8.5 km'}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-slate-500 block">Estimated ETA:</span>
+                        <span className="text-sm font-bold text-emerald-400 font-outfit">
+                          {liveTrackingInfo?.delivery?.estimated_arrival_minutes !== undefined && liveTrackingInfo?.delivery?.estimated_arrival_minutes !== null 
+                            ? `${liveTrackingInfo.delivery.estimated_arrival_minutes} mins` 
+                            : '15 mins'} (LIVE ETA)
+                        </span>
+                      </div>
+                    </div>
+
+                    <div className="text-[10px] text-slate-500 border-t border-slate-800/40 pt-2 flex justify-between">
+                      <span>Last Updated:</span>
+                      <span className="font-mono text-emerald-500">
+                        {liveTrackingInfo?.lastUpdated 
+                          ? `${new Date(liveTrackingInfo.lastUpdated).toLocaleTimeString()}` 
+                          : 'Just Now'}
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Detailed Timeline list */}
+                  <div>
+                    <h4 className="text-xs font-bold text-slate-405 uppercase tracking-wider mb-4 font-outfit">Delivery Timeline Progress</h4>
+                    
+                    {(() => {
+                      const deliverySteps = ['ASSIGNED', 'ACCEPTED', 'GOING_TO_PICKUP', 'PICKED_UP', 'OUT_FOR_DELIVERY', 'ARRIVED', 'DELIVERED'];
+                      const activeStep = liveTrackingInfo?.delivery?.status || 'ASSIGNED';
+                      const currentIdx = deliverySteps.indexOf(activeStep);
+
+                      return (
+                        <div className="space-y-4 pl-3 relative border-l border-slate-800">
+                          {deliverySteps.map((step, idx) => {
+                            const isDone = idx < currentIdx;
+                            const isCurrent = idx === currentIdx;
+
+                            let stepTitle = "Delivery Partner Assigned";
+                            let stepDesc = "Agent has been assigned to delivery.";
+                            if (step === 'ACCEPTED') {
+                              stepTitle = "Delivery Accepted";
+                              stepDesc = "Courier accepted the delivery request.";
+                            } else if (step === 'GOING_TO_PICKUP') {
+                              stepTitle = "Going to Pickup";
+                              stepDesc = "Courier is en route to pickup farm.";
+                            } else if (step === 'PICKED_UP') {
+                              stepTitle = "Order Picked Up";
+                              stepDesc = "Courier collected items from farm.";
+                            } else if (step === 'OUT_FOR_DELIVERY') {
+                              stepTitle = "Out for Delivery";
+                              stepDesc = "Delivery partner is en route to customer house.";
+                            } else if (step === 'ARRIVED') {
+                              stepTitle = "Arrived";
+                              stepDesc = "Courier has reached customer address.";
+                            } else if (step === 'DELIVERED') {
+                              stepTitle = "Delivered successfully";
+                              stepDesc = "Order handed over to recipient. OTP verified.";
+                            }
+
+                            return (
+                              <div key={step} className="relative pl-6">
+                                {/* Dot indicator */}
+                                <div
+                                  className={`absolute -left-[19px] top-1.5 w-3.5 h-3.5 rounded-full border-2 ${isCurrent ? 'bg-emerald-500 border-emerald-400 scale-110 shadow-lg shadow-emerald-500/40 animate-pulse' : isDone ? 'bg-emerald-500 border-emerald-600' : 'bg-slate-950 border-slate-800'}`}
+                                />
+                                <h5 className={`text-xs font-bold ${isCurrent ? 'text-emerald-400' : isDone ? 'text-slate-350' : 'text-slate-500'}`}>
+                                  {stepTitle}
+                                </h5>
+                                <p className="text-[10px] text-slate-500 mt-0.5 leading-normal">{stepDesc}</p>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    })()}
+                  </div>
+                </div>
+
+                {/* Items Summaries */}
+                <div className={`mt-6 pt-4 border-t ${borderClass} text-xs space-y-2`}>
+                  <div className="flex justify-between font-bold">
+                    <span>Order Total:</span>
+                    <span className="text-sm font-black text-lime-600">₹{trackingOrder.total_amount}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     );
   }
