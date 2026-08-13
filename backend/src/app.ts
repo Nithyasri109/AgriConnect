@@ -1663,7 +1663,7 @@ app.post('/api/deliveries/:orderId/assign', authenticateToken, async (req: Authe
     );
 
     // Update order status to DELIVERY_ASSIGNED and link partnerId
-    await queryRun("UPDATE orders SET status = 'DELIVERY_ASSIGNED', delivery_partner_id = ? WHERE id = ?", [partnerId, req.params.orderId]);
+    await queryRun("UPDATE orders SET status = 'DELIVERY_ASSIGNED' WHERE id = ?", [req.params.orderId]);
 
     // Seed initial location at farm
     await queryRun(
@@ -1996,7 +1996,7 @@ app.put('/api/delivery/orders/:orderId/status', authenticateToken, async (req: A
     // Status mapper mapping delivery status updates to order updates
     if (status === 'REJECTED' || status === 'REJECT') {
       await queryRun("UPDATE delivery_partners SET status = 'Available' WHERE id = ?", [delivery.delivery_partner_id]);
-      await queryRun("UPDATE orders SET delivery_partner_id = NULL, status = 'ACCEPTED' WHERE id = ?", [delivery.order_id]);
+      await queryRun("UPDATE orders SET status = 'ACCEPTED' WHERE id = ?", [delivery.order_id]);
       await queryRun("DELETE FROM deliveries WHERE id = ?", [delivery.delivery_id]);
       return res.json({ success: true, message: 'Delivery run rejected' });
     }
