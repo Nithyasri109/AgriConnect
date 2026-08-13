@@ -30,7 +30,7 @@
           "values": [
             {
               "role": "system",
-              "content": "You analyse short delivery-driver voice transcripts for a smart agriculture logistics system.\n\nThe transcript is the delivery driver's original spoken message.\n\nDetect the language of the delivery driver's transcript itself. Do NOT use the receiver's preferred language for detected_language.\n\ndetected_language must be the full English name of the language spoken in the transcript. Support any language, including Tamil, English, Telugu, Kannada, Malayalam, Hindi, Bengali, Marathi, Gujarati, Punjabi, Urdu, and other languages.\n\nClassify the delivery status based on the meaning of the driver's message.\n\ndelivery_status must be one of:\nARRIVED, DELIVERED, NEXT_DELIVERY, ON_THE_WAY, DELAYED, CUSTOMER_UNAVAILABLE, CANNOT_DELIVER, OTHER.\n\nExtract order_id only if an order ID is clearly spoken in the transcript. Otherwise return an empty string.\n\ndriver_message must contain the original transcript verbatim.\n\nReturn ONLY the structured fields. Do not add explanations or extra text."
+              "content": "You analyse short delivery-driver voice transcripts for a smart agriculture logistics system.\n\nDetect the language of the delivery driver's transcript itself. Do NOT use the receiver's preferred language.\ndetected_language must be the full English name of the language (e.g. Tamil, English, Hindi, Malayalam, Telugu, Kannada).\n\nTranslate the transcript verbatim to English. Store this in english_translation.\n\nPerform semantic intent classification on the English translation. Do NOT use simple keyword matching.\nAccount for negation, future/past tense, synonyms, and context.\n\nClassify the status into one of these exact statuses:\n- DELIVERED: Used ONLY if the message indicates the package has been successfully delivered and handed over now (e.g., 'Order delivered successfully', 'The order has been delivered', 'Customer received the parcel', 'I handed over the package').\n- ARRIVED: The driver has reached the destination (e.g., 'I reached the customer location', 'I have arrived').\n- OUT_FOR_DELIVERY: The driver is en route (e.g., 'I am on the way', 'I will deliver tomorrow').\n- PICKED_UP: Driver collected package from the farm (e.g., 'I picked up the package').\n- FAILED: Delivery failed (e.g., 'Delivery failed').\n- UNKNOWN: Negations or unsuccessful attempts (e.g., 'The order is NOT delivered', 'I couldn't deliver', 'Customer was unavailable').\n\nconfidence must be a decimal score between 0.0 and 1.0 representing classification confidence.\n\nReturn ONLY the requested JSON schema."
             },
             {
               "content": "=Transcript: {{ $(\"Transcribe a recording1\").item.json.text }}"
@@ -43,7 +43,7 @@
             "textOptions": {
               "type": "json_schema",
               "name": "delivery_classification",
-              "schema": "={{ JSON.stringify({ type: \"object\", additionalProperties: false, required: [\"delivery_status\",\"detected_language\",\"order_id\",\"driver_message\"], properties: { delivery_status: { type: \"string\", enum: [\"ARRIVED\",\"DELIVERED\",\"NEXT_DELIVERY\",\"ON_THE_WAY\",\"DELAYED\",\"CUSTOMER_UNAVAILABLE\",\"CANNOT_DELIVER\",\"OTHER\"] }, detected_language: { type: \"string\" }, order_id: { type: \"string\" }, driver_message: { type: \"string\" } } }) }}",
+              "schema": "={ JSON.stringify({\"type\": \"object\", \"additionalProperties\": false, \"required\": [\"delivery_status\", \"detected_language\", \"order_id\", \"driver_message\", \"english_translation\", \"confidence\"], \"properties\": {\"delivery_status\": {\"type\": \"string\", \"enum\": [\"DELIVERED\", \"ARRIVED\", \"OUT_FOR_DELIVERY\", \"PICKED_UP\", \"FAILED\", \"UNKNOWN\"]}, \"detected_language\": {\"type\": \"string\"}, \"order_id\": {\"type\": \"string\"}, \"driver_message\": {\"type\": \"string\"}, \"english_translation\": {\"type\": \"string\"}, \"confidence\": {\"type\": \"number\"}}}) }",
               "strict": true
             }
           }
@@ -173,15 +173,14 @@
       ],
       "retryOnFail": true,
       "maxTries": 3,
-      "waitBetweenTries": 2000,
-      "onError": "continueRegularOutput"
+      "waitBetweenTries": 2000
     },
     {
       "parameters": {
         "fromEmail": "kit28.24cs109@gmail.com",
         "toEmail": "={{ $(\"Send To Backend Server\").item.json.farmer_email || $(\"Combine Data\").item.json.receiver_email }}",
         "subject": "=Delivery Update - Order {{ $(\"Combine Data\").item.json.order_id }} ({{ $(\"Combine Data\").item.json.delivery_status }})",
-        "html": "=<h3>AgriConnect Delivery Update</h3><p><b>Order ID:</b> {{ $(\"Combine Data\").item.json.order_id }}</p><p><b>Delivery Partner Name:</b> {{ $(\"Send To Backend Server\").item.json.delivery_partner_name || \"Arun\" }}</p><p><b>Customer Name:</b> {{ $(\"Send To Backend Server\").item.json.customer_name || \"Customer\" }}</p><p><b>Detected Language:</b> {{ $(\"Combine Data\").item.json.detected_language }}</p><p><b>Original Spoken Message:</b> {{ $(\"Combine Data\").item.json.driver_message }}</p><p><b>English Translation:</b> {{ $(\"Combine Data\").item.json.translated_text }}</p><p><b>Delivery Status:</b> {{ $(\"Combine Data\").item.json.delivery_status }}</p><p><b>Timestamp:</b> {{ $(\"Combine Data\").item.json.event_timestamp }}</p>",
+        "html": "=<h3>AgriConnect Delivery Update</h3><p><b>Order ID:</b> {{ $(\"Combine Data\").item.json.order_id }}</p><p><b>Customer Name:</b> {{ $(\"Send To Backend Server\").item.json.customer_name || \"Customer\" }}</p><p><b>Delivery Partner:</b> {{ $(\"Send To Backend Server\").item.json.delivery_partner_name || \"Arun\" }}</p><p><b>Detected Language:</b> {{ $(\"Combine Data\").item.json.detected_language }}</p><p><b>Original Voice Message:</b> {{ $(\"Combine Data\").item.json.driver_message }}</p><p><b>English Translation:</b> {{ $(\"Combine Data\").item.json.translated_text }}</p><p><b>Detected Status:</b> {{ $(\"Combine Data\").item.json.delivery_status }}</p><p><b>Confidence Score:</b> {{ $(\"Combine Data\").item.json.confidence }}</p><p><b>Timestamp:</b> {{ $(\"Combine Data\").item.json.event_timestamp }}</p><p><b>Delivery Location:</b> {{ $(\"Combine Data\").item.json.latitude }}, {{ $(\"Combine Data\").item.json.longitude }}</p>",
         "options": {}
       },
       "id": "eeb4959e-9b9d-493a-b5df-fd75f93af3e1",
@@ -225,7 +224,8 @@
             "longitude": "={{ $(\"Combine Data\").item.json.longitude }}",
             "translation_status": "={{ $(\"Combine Data\").item.json.translation_status }}",
             "processing_status": "={{ $(\"Combine Data\").item.json.processing_status }}",
-            "event_timestamp": "={{ $(\"Combine Data\").item.json.event_timestamp }}"
+            "event_timestamp": "={{ $(\"Combine Data\").item.json.event_timestamp }}",
+            "confidence": "={{ $(\"Combine Data\").item.json.confidence }}"
           },
           "matchingColumns": [],
           "schema": [
@@ -362,6 +362,16 @@
             {
               "id": "event_timestamp",
               "displayName": "event_timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "readOnly": false,
+              "removed": false
+            },
+            {
+              "id": "confidence",
+              "displayName": "confidence",
               "required": false,
               "defaultMatch": false,
               "display": true,

@@ -2724,15 +2724,18 @@ function AppContent() {
 
         setVoiceRecordingStates(prev => ({ ...prev, [orderId]: 'UPLOADING' }));
         
-        // Transition from Uploading to Processing after 1 second to show feedback
-        setTimeout(() => {
-          setVoiceRecordingStates(prev => {
-            if (prev[orderId] === 'UPLOADING') {
-              return { ...prev, [orderId]: 'PROCESSING' };
-            }
-            return prev;
-          });
-        }, 1000);
+        // Progressively transition through workflow states to provide real-time UI feedback
+        const aiTimer = setTimeout(() => {
+          setVoiceRecordingStates(prev => prev[orderId] === 'UPLOADING' ? { ...prev, [orderId]: 'PROCESSING_AI' } : prev);
+        }, 1200);
+
+        const backendTimer = setTimeout(() => {
+          setVoiceRecordingStates(prev => prev[orderId] === 'PROCESSING_AI' ? { ...prev, [orderId]: 'BACKEND_UPDATING' } : prev);
+        }, 2800);
+
+        const emailTimer = setTimeout(() => {
+          setVoiceRecordingStates(prev => prev[orderId] === 'BACKEND_UPDATING' ? { ...prev, [orderId]: 'SENDING_EMAIL' } : prev);
+        }, 4400);
 
         try {
           const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
@@ -2755,6 +2758,11 @@ function AppContent() {
                 body: JSON.stringify(payload)
               });
 
+              // Clear dynamic timers
+              clearTimeout(aiTimer);
+              clearTimeout(backendTimer);
+              clearTimeout(emailTimer);
+
               if (response.ok) {
                 const result = await response.json();
                 if (result.status === 'success' || result.success) {
@@ -2767,7 +2775,7 @@ function AppContent() {
                   throw new Error(result.error || 'n8n process failed');
                 }
               } else {
-                throw new Error('Upload failed');
+                throw new Error('Workflow execution failed');
               }
             } catch (innerError: any) {
               console.error('Failed to complete base64 upload:', innerError);
@@ -2778,6 +2786,9 @@ function AppContent() {
             }
           };
         } catch (uploadError) {
+          clearTimeout(aiTimer);
+          clearTimeout(backendTimer);
+          clearTimeout(emailTimer);
           console.error('Failed to prepare voice upload:', uploadError);
           setVoiceRecordingStates(prev => ({ ...prev, [orderId]: 'FAILED' }));
           setTimeout(() => {
@@ -6170,18 +6181,24 @@ function AppContent() {
                                 let btnClass = "bg-slate-900 text-white hover:bg-slate-800";
                                 if (recState === 'RECORDING') {
                                   btnText = "🔴 Stop Recording";
-                                  btnClass = "bg-red-500 text-white animate-pulse hover:bg-red-600";
+                                  btnClass = "bg-red-500 text-white animate-pulse hover:bg-red-650";
                                 } else if (recState === 'UPLOADING') {
                                   btnText = "☁ Uploading...";
                                   btnClass = "bg-amber-500 text-white cursor-not-allowed animate-pulse";
-                                } else if (recState === 'PROCESSING') {
-                                  btnText = "🤖 AI Processing...";
+                                } else if (recState === 'PROCESSING_AI') {
+                                  btnText = "🤖 Processing AI...";
                                   btnClass = "bg-sky-500 text-white cursor-not-allowed animate-pulse";
+                                } else if (recState === 'BACKEND_UPDATING') {
+                                  btnText = "💾 Backend Updating...";
+                                  btnClass = "bg-purple-500 text-white cursor-not-allowed animate-pulse";
+                                } else if (recState === 'SENDING_EMAIL') {
+                                  btnText = "✉ Sending Email...";
+                                  btnClass = "bg-teal-500 text-white cursor-not-allowed animate-pulse";
                                 } else if (recState === 'COMPLETED') {
-                                  btnText = "✅ Voice Update Successful";
+                                  btnText = "✅ Completed";
                                   btnClass = "bg-emerald-500 text-white cursor-not-allowed";
                                 } else if (recState === 'FAILED') {
-                                  btnText = "❌ Upload Failed";
+                                  btnText = "❌ Failed";
                                   btnClass = "bg-red-600 text-white cursor-not-allowed";
                                 }
 
@@ -6273,18 +6290,24 @@ function AppContent() {
                         let btnClass = "bg-slate-900 text-white hover:bg-slate-800";
                         if (recState === 'RECORDING') {
                           btnText = "🔴 Stop Recording";
-                          btnClass = "bg-red-500 text-white animate-pulse hover:bg-red-600";
+                          btnClass = "bg-red-500 text-white animate-pulse hover:bg-red-650";
                         } else if (recState === 'UPLOADING') {
                           btnText = "☁ Uploading...";
                           btnClass = "bg-amber-500 text-white cursor-not-allowed animate-pulse";
-                        } else if (recState === 'PROCESSING') {
-                          btnText = "🤖 AI Processing...";
+                        } else if (recState === 'PROCESSING_AI') {
+                          btnText = "🤖 Processing AI...";
                           btnClass = "bg-sky-500 text-white cursor-not-allowed animate-pulse";
+                        } else if (recState === 'BACKEND_UPDATING') {
+                          btnText = "💾 Backend Updating...";
+                          btnClass = "bg-purple-500 text-white cursor-not-allowed animate-pulse";
+                        } else if (recState === 'SENDING_EMAIL') {
+                          btnText = "✉ Sending Email...";
+                          btnClass = "bg-teal-500 text-white cursor-not-allowed animate-pulse";
                         } else if (recState === 'COMPLETED') {
-                          btnText = "✅ Voice Update Successful";
+                          btnText = "✅ Completed";
                           btnClass = "bg-emerald-500 text-white cursor-not-allowed";
                         } else if (recState === 'FAILED') {
-                          btnText = "❌ Upload Failed";
+                          btnText = "❌ Failed";
                           btnClass = "bg-red-600 text-white cursor-not-allowed";
                         }
 
