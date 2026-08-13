@@ -890,6 +890,31 @@ app.post('/api/demo/run', authenticateToken, async (req, res) => {
 // ---------------- MARKETPLACE PRODUCT ROUTES ----------------
 
 const seedDefaultMarketplaceProducts = async (farmerId: string) => {
+  // Deduplicate products: remove duplicate items with the same name for the same farmer
+  try {
+    const duplicates = await queryAll<any>(
+      `SELECT name, COUNT(*) as cnt 
+       FROM marketplace_products 
+       WHERE farmer_id = ? 
+       GROUP BY name 
+       HAVING cnt > 1`,
+      [farmerId]
+    );
+    for (const dup of duplicates) {
+      const oldest = await queryGet<any>(
+        'SELECT id FROM marketplace_products WHERE farmer_id = ? AND name = ? ORDER BY created_at ASC LIMIT 1',
+        [farmerId, dup.name]
+      );
+      if (oldest) {
+        await queryRun(
+          'DELETE FROM marketplace_products WHERE farmer_id = ? AND name = ? AND id != ?',
+          [farmerId, dup.name, oldest.id]
+        );
+      }
+    }
+  } catch (e) {
+    console.error('Deduplication error:', e);
+  }
 
   const defaultProducts = [
     {
@@ -1318,7 +1343,10 @@ app.put(['/api/products/:id', '/api/farmer/products/:id'], authenticateToken, as
 // 5. Farmer deletes product listing
 app.delete(['/api/products/:id', '/api/farmer/products/:id'], authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
-    const result = await queryRun(
+    // Delete any referencing order items to prevent SQLite foreign key constraint failure
+    await queryRun('DELETE FROM order_items WHERE product_id = ?', [req.params.id]);
+
+    await queryRun(
       'DELETE FROM marketplace_products WHERE id = ? AND farmer_id = ?',
       [req.params.id, req.userId]
     );
