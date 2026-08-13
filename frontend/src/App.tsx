@@ -4153,13 +4153,39 @@ function AppContent() {
                       </tr>
                     ) : (
                       adminOrders.map((o) => {
-                      let orderBadgeColor = "text-slate-400 bg-slate-500/10 border-slate-500/20";
-                      if (o.status === 'PENDING') orderBadgeColor = "text-yellow-500 bg-yellow-500/10 border-yellow-500/20";
-                      else if (o.status === 'ACCEPTED') orderBadgeColor = "text-blue-500 bg-blue-500/10 border-blue-500/20";
-                      else if (o.status === 'DISPATCHED') orderBadgeColor = "text-purple-500 bg-purple-500/10 border-purple-500/20";
-                      else if (o.status === 'DELIVERED') orderBadgeColor = "text-green-500 bg-green-500/10 border-green-500/20";
-                      else if (o.status === 'CANCELLED' || o.status === 'DELIVERY_FAILED') orderBadgeColor = "text-red-500 bg-red-500/10 border-red-500/20";
-                      else if (o.status === 'DISPUTED') orderBadgeColor = "text-orange-500 bg-orange-500/10 border-orange-500/20";
+                      const statusColors: { [key: string]: string } = {
+                        PENDING: 'text-yellow-600 bg-yellow-500/10 border-yellow-500/20',
+                        ACCEPTED: 'text-blue-500 bg-blue-500/10 border-blue-500/20',
+                        DELIVERY_ASSIGNED: 'text-indigo-600 bg-indigo-500/10 border-indigo-500/20',
+                        DELIVERY_ACCEPTED: 'text-teal-600 bg-teal-500/10 border-teal-500/20',
+                        GOING_TO_PICKUP: 'text-amber-600 bg-amber-500/10 border-amber-500/20',
+                        PICKED_UP: 'text-orange-600 bg-orange-500/10 border-orange-500/20',
+                        OUT_FOR_DELIVERY: 'text-sky-600 bg-sky-500/10 border-sky-500/20',
+                        ARRIVED: 'text-pink-600 bg-pink-500/10 border-pink-500/20',
+                        DELIVERED: 'text-green-600 bg-green-500/10 border-green-500/20',
+                        COMPLETED: 'text-emerald-600 bg-emerald-500/10 border-emerald-500/20',
+                        CANCELLED: 'text-red-500 bg-red-500/10 border-red-500/20',
+                        DELIVERY_FAILED: 'text-red-500 bg-red-500/10 border-red-500/20',
+                        DISPUTED: 'text-orange-500 bg-orange-500/10 border-orange-500/20'
+                      };
+
+                      const statusText: { [key: string]: string } = {
+                        PENDING: 'Pending Farmer Approval',
+                        ACCEPTED: 'Accepted by Farmer',
+                        DELIVERY_ASSIGNED: 'Delivery Assigned',
+                        DELIVERY_ACCEPTED: 'Accepted by Delivery Person',
+                        GOING_TO_PICKUP: 'Going to Pickup',
+                        PICKED_UP: 'Picked Up',
+                        OUT_FOR_DELIVERY: 'Out for Delivery',
+                        ARRIVED: 'Arrived',
+                        DELIVERED: 'Delivered Successfully',
+                        COMPLETED: 'Completed',
+                        CANCELLED: 'Cancelled',
+                        DELIVERY_FAILED: 'Delivery Failed',
+                        DISPUTED: 'Disputed'
+                      };
+
+                      let orderBadgeColor = statusColors[o.status] || "text-slate-400 bg-slate-500/10 border-slate-500/20";
 
                       let payBadgeColor = "text-slate-400 bg-slate-500/10 border-slate-500/20";
                       if (o.payment_status === 'PENDING') payBadgeColor = "text-yellow-500 bg-yellow-500/10 border-yellow-500/20";
@@ -4179,7 +4205,7 @@ function AppContent() {
                           <td className="py-4 px-4 text-sm font-black font-outfit text-slate-900">₹{o.total_amount}</td>
                           <td className="py-4 px-4">
                             <span className={`px-2.5 py-0.5 rounded border text-[10px] font-bold uppercase tracking-wider ${orderBadgeColor}`}>
-                              {o.status}
+                              {statusText[o.status] || o.status}
                             </span>
                           </td>
                           <td className="py-4 px-4">
@@ -4536,11 +4562,15 @@ function AppContent() {
               ) : (
                 <div className="space-y-6">
                   {customerOrders.map((o) => {
-                    const steps = ['PENDING', 'ACCEPTED', 'DISPATCHED', 'DELIVERED'];
-                    const currentIdx = steps.indexOf(o.status);
+                    const steps = ['PENDING', 'ACCEPTED', 'DELIVERY_ASSIGNED', 'PICKED_UP', 'OUT_FOR_DELIVERY', 'ARRIVED', 'COMPLETED'];
+                    const getStepIdx = (status: string) => {
+                      if (status === 'DELIVERY_ACCEPTED' || status === 'GOING_TO_PICKUP') return 2; // maps to DELIVERY_ASSIGNED
+                      return steps.indexOf(status);
+                    };
+                    const currentIdx = getStepIdx(o.status);
 
                     let remainingTimeStr = '';
-                    if (o.delivery_deadline && (o.status === 'ACCEPTED' || o.status === 'DISPATCHED')) {
+                    if (o.delivery_deadline && o.status !== 'PENDING' && o.status !== 'COMPLETED' && o.status !== 'CANCELLED' && o.status !== 'DELIVERY_FAILED') {
                       const diff = new Date(o.delivery_deadline).getTime() - Date.now();
                       if (diff > 0) {
                         const hrs = Math.floor(diff / (1000 * 60 * 60));
@@ -4606,7 +4636,7 @@ function AppContent() {
                         {/* Middle Action Panels: OTP and countdown details */}
                         {o.status !== 'CANCELLED' && o.status !== 'DELIVERY_FAILED' && (
                           <div className={`mb-6 p-4 ${innerBoxClass} rounded-2xl grid grid-cols-1 md:grid-cols-2 gap-4 text-xs`}>
-                            {o.delivery_otp && (o.status === 'ACCEPTED' || o.status === 'DISPATCHED') && (
+                            {o.delivery_otp && o.status !== 'PENDING' && o.status !== 'COMPLETED' && o.status !== 'CANCELLED' && o.status !== 'DELIVERY_FAILED' && (
                               <div className="bg-emerald-500/10 border border-emerald-500/20 p-3 rounded-xl flex flex-col justify-center">
                                 <span className="text-[10px] font-bold text-emerald-600 block uppercase tracking-wider">🔒 Security Delivery OTP</span>
                                 <div className="text-2xl font-black text-white mt-1 tracking-widest">{o.delivery_otp}</div>
@@ -4652,7 +4682,7 @@ function AppContent() {
                                           {idx + 1}
                                         </div>
                                         <span className={`text-[10px] font-bold mt-2 text-center select-none ${isCurrent ? 'text-lime-500' : isActive ? 'text-slate-400' : 'text-slate-600'}`}>
-                                          {st}
+                                          {st === 'PENDING' ? 'Placed' : st === 'ACCEPTED' ? 'Accepted' : st === 'DELIVERY_ASSIGNED' ? 'Assigned' : st === 'PICKED_UP' ? 'Picked Up' : st === 'OUT_FOR_DELIVERY' ? 'On Way' : st === 'ARRIVED' ? 'Arrived' : 'Completed'}
                                         </span>
                                       </div>
                                     );
@@ -5756,28 +5786,83 @@ function AppContent() {
                       {selectedDeliveryOrder.delivery_status === 'ASSIGNED' && (
                         <button
                           onClick={() => handleDeliveryStatusUpdate(selectedDeliveryOrder.order_id, 'ACCEPTED')}
-                          className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold rounded-xl text-xs flex items-center justify-center gap-1 transition-all"
+                          className="w-full py-2.5 bg-emerald-500 hover:bg-emerald-400 text-slate-955 font-bold rounded-xl text-xs flex items-center justify-center gap-1 transition-all"
                         >
-                          Accept Delivery Run
+                          Accept Delivery Request
                         </button>
                       )}
                       
-                      {(selectedDeliveryOrder.delivery_status === 'ACCEPTED') && (
+                      {selectedDeliveryOrder.delivery_status === 'ACCEPTED' && (
+                        <button
+                          onClick={() => handleDeliveryStatusUpdate(selectedDeliveryOrder.order_id, 'GOING_TO_PICKUP')}
+                          className="w-full py-2.5 bg-blue-500 hover:bg-blue-400 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1 transition-all"
+                        >
+                          Mark Going to Pickup
+                        </button>
+                      )}
+
+                      {selectedDeliveryOrder.delivery_status === 'GOING_TO_PICKUP' && (
+                        <button
+                          onClick={() => handleDeliveryStatusUpdate(selectedDeliveryOrder.order_id, 'PICKED_UP')}
+                          className="w-full py-2.5 bg-amber-500 hover:bg-amber-400 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1 transition-all"
+                        >
+                          Confirm Picked Up from Farmer
+                        </button>
+                      )}
+
+                      {selectedDeliveryOrder.delivery_status === 'PICKED_UP' && (
                         <button
                           onClick={() => handleDeliveryStatusUpdate(selectedDeliveryOrder.order_id, 'OUT_FOR_DELIVERY')}
                           className="w-full py-2.5 bg-sky-500 hover:bg-sky-400 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1 transition-all"
                         >
-                          Start Delivery
+                          Mark Out for Delivery
                         </button>
                       )}
 
-                      {(selectedDeliveryOrder.delivery_status === 'OUT_FOR_DELIVERY' || selectedDeliveryOrder.delivery_status === 'NEAR CUSTOMER' || selectedDeliveryOrder.delivery_status === 'NEAR_CUSTOMER') && (
+                      {selectedDeliveryOrder.delivery_status === 'OUT_FOR_DELIVERY' && (
                         <button
-                          onClick={() => handleDeliveryStatusUpdate(selectedDeliveryOrder.order_id, 'DELIVERED')}
-                          className="w-full py-2.5 bg-lime-500 hover:bg-lime-400 text-slate-955 font-bold rounded-xl text-xs flex items-center justify-center gap-1 transition-all"
+                          onClick={() => handleDeliveryStatusUpdate(selectedDeliveryOrder.order_id, 'ARRIVED')}
+                          className="w-full py-2.5 bg-pink-500 hover:bg-pink-400 text-white font-bold rounded-xl text-xs flex items-center justify-center gap-1 transition-all"
                         >
-                          Complete Delivery
+                          Mark Arrived at Customer Location
                         </button>
+                      )}
+
+                      {selectedDeliveryOrder.delivery_status === 'ARRIVED' && (
+                        <div className="p-4 bg-slate-955/25 bg-slate-950/20 border border-slate-800 rounded-2xl space-y-3 text-left">
+                          <span className="text-[10px] font-bold text-amber-500 block uppercase tracking-wider font-outfit">Awaiting Customer Verification</span>
+                          <p className="text-[11px] text-slate-400">Please collect the 4-digit security OTP from the customer to finalize this delivery.</p>
+                          <form
+                            onSubmit={async (e) => {
+                              e.preventDefault();
+                              const inputOtp = (e.target as any).otp.value;
+                              if (!inputOtp) return alert('Please enter OTP');
+                              const res = await deliverOrder(selectedDeliveryOrder.order_id, inputOtp);
+                              if (res?.success) {
+                                alert('Delivery completed successfully!');
+                                setSelectedDeliveryOrder(null);
+                                loadDeliveryPersonOrders();
+                              } else {
+                                alert(res?.error || 'Incorrect OTP.');
+                              }
+                            }}
+                            className="space-y-2 font-outfit"
+                          >
+                            <input
+                              name="otp"
+                              type="text"
+                              maxLength={4}
+                              placeholder="Enter 4-digit OTP"
+                              className="w-full px-3 py-2 bg-slate-900 border border-slate-700 rounded-xl text-xs text-white text-center tracking-widest font-mono font-bold"
+                            />
+                            <button
+                              type="submit"
+                              className="w-full py-2 bg-emerald-500 hover:bg-emerald-400 text-slate-955 font-bold rounded-xl text-xs transition-colors"
+                            >
+                              Verify OTP & Complete Delivery
+                            </button>
+                          </form>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -7639,7 +7724,7 @@ function AppContent() {
                     </div>
 
                     {/* Deadline and OTP status details for farmer */}
-                    {(o.status === 'ACCEPTED' || o.status === 'DISPATCHED') && (
+                    {o.status !== 'PENDING' && o.status !== 'COMPLETED' && o.status !== 'CANCELLED' && o.status !== 'DELIVERY_FAILED' && (
                       <div className="mb-4 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
                         {o.delivery_deadline && (
                           <div className="p-3 bg-slate-950/20 border border-slate-700/20 rounded-xl flex items-center justify-between">
@@ -7703,36 +7788,20 @@ function AppContent() {
                           </button>
                         </>
                       )}
-                      {o.status === 'ACCEPTED' && (
-                        <>
-                          <button
-                            onClick={async () => {
-                              const res = await dispatchOrder(o.id);
-                              if (res?.success) {
-                                alert('Order marked as DISPATCHED!');
-                                loadFarmerOrders();
-                              } else {
-                                alert(res?.error || 'Failed to dispatch order.');
-                              }
-                            }}
-                            className="px-4 py-2 bg-purple-500 text-white font-bold rounded-xl text-xs hover:bg-purple-400 transition-colors"
-                          >
-                            🚚 Dispatch Order
-                          </button>
-                          <button
-                            onClick={() => {
-                              setAssigningOrder(o);
-                              setManualPickupLocation(farm?.location || 'Coimbatore, TN');
-                              setManualDeliveryLocation(o.shipping_address);
-                              setActiveTab('deliveries');
-                            }}
-                            className="px-4 py-2 bg-blue-500 text-white font-bold rounded-xl text-xs hover:bg-blue-400 transition-colors"
-                          >
-                            Assign Delivery Person
-                          </button>
-                        </>
+                      {(o.status === 'ACCEPTED' || o.status === 'DELIVERY_ASSIGNED') && (
+                        <button
+                          onClick={() => {
+                            setAssigningOrder(o);
+                            setManualPickupLocation(farm?.location || 'Coimbatore, TN');
+                            setManualDeliveryLocation(o.shipping_address);
+                            setActiveTab('deliveries');
+                          }}
+                          className="px-4 py-2 bg-blue-500 text-white font-bold rounded-xl text-xs hover:bg-blue-400 transition-colors"
+                        >
+                          Assign Delivery Person
+                        </button>
                       )}
-                      {(o.status === 'DISPATCHED' || o.status === 'ACCEPTED') && (
+                      {o.status === 'ARRIVED' && (
                         <button
                           onClick={() => setOtpInputOrder(o)}
                           className="px-4 py-2 bg-emerald-500 text-slate-955 font-bold rounded-xl text-xs hover:bg-emerald-400 transition-colors"
@@ -7968,10 +8037,12 @@ function AppContent() {
                           {(() => {
                             const status = liveTrackingInfo?.delivery?.status || 'ASSIGNED';
                             if (status === 'ASSIGNED') return 'Delivery person assigned';
+                            if (status === 'ACCEPTED') return 'Delivery accepted - Preparing';
+                            if (status === 'GOING_TO_PICKUP') return 'Courier heading to pickup';
                             if (status === 'PICKED_UP') return 'Order picked up at farm';
-                            if (status === 'OUT_FOR_DELIVERY') return 'Delivery person is on the way';
-                            if (status === 'NEAR_YOU' || status === 'NEAR CUSTOMER' || status === 'NEAR_CUSTOMER') return 'Delivery person is nearby';
-                            if (status === 'DELIVERED') return 'Order successfully delivered';
+                            if (status === 'OUT_FOR_DELIVERY') return 'Courier is on the way to you';
+                            if (status === 'ARRIVED') return 'Courier has arrived';
+                            if (status === 'DELIVERED') return 'Order successfully completed';
                             return status;
                           })()}
                         </span>
@@ -8012,7 +8083,7 @@ function AppContent() {
                     <h4 className="text-xs font-bold text-slate-405 uppercase tracking-wider mb-4 font-outfit">Delivery Timeline Progress</h4>
                     
                     {(() => {
-                      const deliverySteps = ['ASSIGNED', 'PICKED_UP', 'OUT_FOR_DELIVERY', 'NEAR_YOU', 'DELIVERED'];
+                      const deliverySteps = ['ASSIGNED', 'ACCEPTED', 'GOING_TO_PICKUP', 'PICKED_UP', 'OUT_FOR_DELIVERY', 'ARRIVED', 'DELIVERED'];
                       const activeStep = liveTrackingInfo?.delivery?.status || 'ASSIGNED';
                       const currentIdx = deliverySteps.indexOf(activeStep);
 
@@ -8023,19 +8094,25 @@ function AppContent() {
                             const isCurrent = idx === currentIdx;
 
                             let stepTitle = "Delivery Partner Assigned";
-                            let stepDesc = "Agent has accepted the pickup request.";
-                            if (step === 'PICKED_UP') {
+                            let stepDesc = "Agent has been assigned to delivery.";
+                            if (step === 'ACCEPTED') {
+                              stepTitle = "Delivery Accepted";
+                              stepDesc = "Courier accepted the delivery request.";
+                            } else if (step === 'GOING_TO_PICKUP') {
+                              stepTitle = "Going to Pickup";
+                              stepDesc = "Courier is en route to pickup farm.";
+                            } else if (step === 'PICKED_UP') {
                               stepTitle = "Order Picked Up";
-                              stepDesc = "Courier is packing produce at the farm.";
+                              stepDesc = "Courier collected items from farm.";
                             } else if (step === 'OUT_FOR_DELIVERY') {
                               stepTitle = "Out for Delivery";
                               stepDesc = "Delivery partner is en route to customer house.";
-                            } else if (step === 'NEAR_YOU') {
-                              stepTitle = "Near Your Location";
-                              stepDesc = "Courier has entered customer delivery zone (< 500m).";
+                            } else if (step === 'ARRIVED') {
+                              stepTitle = "Arrived";
+                              stepDesc = "Courier has reached customer address.";
                             } else if (step === 'DELIVERED') {
                               stepTitle = "Delivered successfully";
-                              stepDesc = "Order handed over to recipient. COD cash collected.";
+                              stepDesc = "Order handed over to recipient. OTP verified.";
                             }
 
                             return (

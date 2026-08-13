@@ -1262,9 +1262,15 @@ app.post('/api/orders/:orderId/deliver', authenticateToken, async (req: Authenti
   try {
     const order = await queryGet<any>('SELECT * FROM orders WHERE id = ?', [orderId]);
     if (!order) return res.status(404).json({ error: 'Order not found.' });
-    if (order.farmer_id !== req.userId) return res.status(403).json({ error: 'Unauthorized.' });
-    if (order.status !== 'DISPATCHED' && order.status !== 'ACCEPTED') {
-      return res.status(400).json({ error: 'Order must be ACCEPTED or DISPATCHED to complete delivery.' });
+
+    const isFarmer = order.farmer_id === req.userId;
+    const isDeliveryPartner = order.delivery_partner_id === req.userId;
+    if (!isFarmer && !isDeliveryPartner) {
+      return res.status(403).json({ error: 'Unauthorized. Only the farmer or assigned delivery person can verify OTP.' });
+    }
+
+    if (order.status !== 'ARRIVED') {
+      return res.status(400).json({ error: 'Order must be ARRIVED to complete delivery verification.' });
     }
 
     if (order.delivery_otp !== otp.trim()) {
@@ -1302,9 +1308,19 @@ app.post('/api/orders/:orderId/deliver', authenticateToken, async (req: Authenti
     // Correct OTP: Deliver order, release payment, finalize stock
     const nowStr = new Date().toISOString();
     await queryRun(
-      "UPDATE orders SET status = 'DELIVERED', payment_status = 'RELEASED', delivered_date = ? WHERE id = ?",
+      "UPDATE orders SET status = 'COMPLETED', payment_status = 'RELEASED', delivered_date = ? WHERE id = ?",
       [nowStr, orderId]
     );
+
+    // Update delivery status to DELIVERED and release courier
+    const delivery = await queryGet<any>("SELECT * FROM deliveries WHERE order_id = ?", [orderId]);
+    if (delivery) {
+      await queryRun(
+        "UPDATE deliveries SET status = 'DELIVERED', delivered_at = ? WHERE id = ?",
+        [nowStr, delivery.id]
+      );
+      await queryRun("UPDATE delivery_partners SET status = 'Available' WHERE id = ?", [delivery.delivery_partner_id]);
+    }
 
     // Finalize stock reservation: subtract from reserved_quantity
     await queryRun(
@@ -1594,6 +1610,10 @@ app.post('/api/deliveries/:orderId/assign', authenticateToken, async (req: Authe
     );
     if (!order) return res.status(404).json({ error: 'Order not found.' });
 
+    if (order.status !== 'ACCEPTED' && order.status !== 'DELIVERY_ASSIGNED') {
+      return res.status(400).json({ error: 'Order must be accepted by farmer before assigning a delivery partner.' });
+    }
+
     if (!partnerId) {
       if (!name || !phone || !vehicleType) {
         return res.status(400).json({ error: 'deliveryPartnerId or manual details (name, phone, vehicleType) are required.' });
@@ -1642,8 +1662,8 @@ app.post('/api/deliveries/:orderId/assign', authenticateToken, async (req: Authe
       [deliveryId, req.params.orderId, partnerId, 'ASSIGNED', 8.5, 15]
     );
 
-    // Update order status to ACCEPTED
-    await queryRun("UPDATE orders SET status = 'ACCEPTED' WHERE id = ?", [req.params.orderId]);
+    // Update order status to DELIVERY_ASSIGNED and link partnerId
+    await queryRun("UPDATE orders SET status = 'DELIVERY_ASSIGNED', delivery_partner_id = ? WHERE id = ?", [partnerId, req.params.orderId]);
 
     // Seed initial location at farm
     await queryRun(
@@ -1747,18 +1767,27 @@ app.post('/api/deliveries/:id/simulate', authenticateToken, async (req: Authenti
       );
 
       // 3. Sync order status dynamically
-      let orderStatus = 'ACCEPTED';
-      if (point.status === 'ASSIGNED') orderStatus = 'ACCEPTED';
-      else if (point.status === 'PICKED_UP') orderStatus = 'PREPARING';
+      let orderStatus = 'DELIVERY_ASSIGNED';
+      if (point.status === 'ASSIGNED') orderStatus = 'DELIVERY_ASSIGNED';
+      else if (point.status === 'PICKED_UP') orderStatus = 'PICKED_UP';
       else if (point.status === 'OUT_FOR_DELIVERY' || point.status === 'NEAR_YOU') orderStatus = 'OUT_FOR_DELIVERY';
-      else if (point.status === 'DELIVERED') orderStatus = 'DELIVERED';
+      else if (point.status === 'DELIVERED') orderStatus = 'COMPLETED';
 
-      await queryRun(
-        `UPDATE orders 
-         SET status = ? 
-         WHERE id = (SELECT order_id FROM deliveries WHERE id = ?)`,
-        [orderStatus, deliveryId]
-      );
+      if (point.status === 'DELIVERED') {
+        await queryRun(
+          `UPDATE orders 
+           SET status = 'COMPLETED', payment_status = 'RELEASED', delivered_date = CURRENT_TIMESTAMP
+           WHERE id = (SELECT order_id FROM deliveries WHERE id = ?)`,
+          [deliveryId]
+        );
+      } else {
+        await queryRun(
+          `UPDATE orders 
+           SET status = ? 
+           WHERE id = (SELECT order_id FROM deliveries WHERE id = ?)`,
+          [orderStatus, deliveryId]
+        );
+      }
 
       // 4. Record notify alerts
       const d = await queryGet<any>('SELECT order_id FROM deliveries WHERE id = ?', [deliveryId]);
@@ -1954,7 +1983,7 @@ app.put('/api/delivery/orders/:orderId/status', authenticateToken, async (req: A
 
   try {
     const delivery = await queryGet<any>(
-      `SELECT d.id AS delivery_id, d.delivery_partner_id, o.id AS order_id, f.id AS farm_id
+      `SELECT d.id AS delivery_id, d.status AS delivery_status, d.delivery_partner_id, o.id AS order_id, f.id AS farm_id
        FROM deliveries d
        JOIN orders o ON d.order_id = o.id
        LEFT JOIN farms f ON o.farmer_id = f.user_id
@@ -1967,29 +1996,53 @@ app.put('/api/delivery/orders/:orderId/status', authenticateToken, async (req: A
     // Status mapper mapping delivery status updates to order updates
     if (status === 'REJECTED' || status === 'REJECT') {
       await queryRun("UPDATE delivery_partners SET status = 'Available' WHERE id = ?", [delivery.delivery_partner_id]);
-      await queryRun("UPDATE orders SET delivery_partner_id = NULL WHERE id = ?", [delivery.order_id]);
+      await queryRun("UPDATE orders SET delivery_partner_id = NULL, status = 'ACCEPTED' WHERE id = ?", [delivery.order_id]);
       await queryRun("DELETE FROM deliveries WHERE id = ?", [delivery.delivery_id]);
       return res.json({ success: true, message: 'Delivery run rejected' });
     }
 
-    let orderStatus = 'ACCEPTED';
+    const currentStatus = delivery.delivery_status;
+
+    // Validate strict sequential transitions
+    if (status === 'ACCEPTED') {
+      if (currentStatus !== 'ASSIGNED') {
+        return res.status(400).json({ error: 'Delivery request can only be accepted if it is ASSIGNED.' });
+      }
+    } else if (status === 'GOING_TO_PICKUP') {
+      if (currentStatus !== 'ACCEPTED') {
+        return res.status(400).json({ error: 'Can only mark as Going to Pickup after accepting the delivery request.' });
+      }
+    } else if (status === 'PICKED_UP') {
+      if (currentStatus !== 'GOING_TO_PICKUP') {
+        return res.status(400).json({ error: 'Can only mark as Picked Up after heading to pickup.' });
+      }
+    } else if (status === 'OUT_FOR_DELIVERY') {
+      if (currentStatus !== 'PICKED_UP') {
+        return res.status(400).json({ error: 'Can only mark as Out for Delivery after picking up from farmer.' });
+      }
+    } else if (status === 'ARRIVED') {
+      if (currentStatus !== 'OUT_FOR_DELIVERY') {
+        return res.status(400).json({ error: 'Can only mark as Arrived after being Out for Delivery.' });
+      }
+    } else if (status === 'DELIVERED') {
+      return res.status(400).json({ error: 'Directly marking as Delivered is not allowed. Verification OTP is required.' });
+    }
+
+    let orderStatus = 'DELIVERY_ASSIGNED';
     let pickedUpAt = null;
     let deliveredAt = null;
 
     if (status === 'ACCEPTED') {
-      orderStatus = 'ACCEPTED';
-    } else if (status === 'PICKED UP' || status === 'PICKED_UP') {
-      orderStatus = 'OUT_FOR_DELIVERY'; // Order goes out for delivery
+      orderStatus = 'DELIVERY_ACCEPTED';
+    } else if (status === 'GOING_TO_PICKUP') {
+      orderStatus = 'GOING_TO_PICKUP';
+    } else if (status === 'PICKED_UP') {
+      orderStatus = 'PICKED_UP';
       pickedUpAt = new Date().toISOString();
-    } else if (status === 'OUT FOR DELIVERY' || status === 'OUT_FOR_DELIVERY') {
+    } else if (status === 'OUT_FOR_DELIVERY') {
       orderStatus = 'OUT_FOR_DELIVERY';
-    } else if (status === 'NEAR CUSTOMER' || status === 'NEAR_CUSTOMER') {
-      orderStatus = 'NEAR CUSTOMER';
-    } else if (status === 'DELIVERED') {
-      orderStatus = 'DELIVERED';
-      deliveredAt = new Date().toISOString();
-      // Set delivery partner back to Available
-      await queryRun("UPDATE delivery_partners SET status = 'Available' WHERE id = ?", [delivery.delivery_partner_id]);
+    } else if (status === 'ARRIVED') {
+      orderStatus = 'ARRIVED';
     }
 
     await queryRun(
