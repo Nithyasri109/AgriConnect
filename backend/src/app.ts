@@ -890,8 +890,6 @@ app.post('/api/demo/run', authenticateToken, async (req, res) => {
 // ---------------- MARKETPLACE PRODUCT ROUTES ----------------
 
 const seedDefaultMarketplaceProducts = async (farmerId: string) => {
-  const check = await queryGet<{ count: number }>('SELECT count(*) as count FROM marketplace_products WHERE farmer_id = ?', [farmerId]);
-  if (check && check.count >= 20) return;
 
   const defaultProducts = [
     {
@@ -1161,8 +1159,11 @@ const seedDefaultMarketplaceProducts = async (farmerId: string) => {
   ];
 
   for (const p of defaultProducts) {
-    const exists = await queryGet<any>('SELECT 1 FROM marketplace_products WHERE farmer_id = ? AND name = ?', [farmerId, p.name]);
-    if (exists) continue;
+    const exists = await queryGet<any>('SELECT * FROM marketplace_products WHERE farmer_id = ? AND name = ?', [farmerId, p.name]);
+    if (exists) {
+      await queryRun('UPDATE marketplace_products SET image_url = ? WHERE id = ?', [p.image_url, exists.id]);
+      continue;
+    }
 
     const prodId = 'prod_' + Math.random().toString(36).substr(2, 9);
     await queryRun(
@@ -1171,6 +1172,20 @@ const seedDefaultMarketplaceProducts = async (farmerId: string) => {
       [prodId, farmerId, p.name, p.category, p.crop, p.variety, p.quantity, p.unit, p.price, new Date().toISOString().split('T')[0], p.quality, p.description, p.image_url, 'ACTIVE']
     );
   }
+
+  // Also force update Sam's existing products if they exist
+  await queryRun(
+    `UPDATE marketplace_products SET image_url = ? WHERE farmer_id = ? AND name LIKE ?`,
+    ['https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=600&q=80', farmerId, '%Basmati Rice%']
+  );
+  await queryRun(
+    `UPDATE marketplace_products SET image_url = ? WHERE farmer_id = ? AND name LIKE ?`,
+    ['https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=600&q=80', farmerId, '%Mango%']
+  );
+  await queryRun(
+    `UPDATE marketplace_products SET image_url = ? WHERE farmer_id = ? AND name LIKE ?`,
+    ['https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=600&q=80', farmerId, '%Tomato%']
+  );
 };
 
 // 1. Fetch public marketplace products
