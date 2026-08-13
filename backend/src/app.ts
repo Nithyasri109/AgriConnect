@@ -146,6 +146,7 @@ const registerUser = async (req: any, res: any, forcedRole?: string) => {
         ['fh_' + Date.now(), farmId, 80.0, 80.0, 80.0, 80.0, 80.0, 80.0, 80.0, 80.0]);
       await queryRun('INSERT INTO sustainability_scores (id, farm_id, score, water_efficiency, soil_health, resource_conservation, crop_diversity) VALUES (?, ?, ?, ?, ?, ?, ?)',
         ['sust_' + Date.now(), farmId, 75.0, 75.0, 75.0, 75.0, 75.0]);
+      await seedFarmerProducts(id);
     }
 
     if (userRole === 'delivery') {
@@ -159,6 +160,47 @@ const registerUser = async (req: any, res: any, forcedRole?: string) => {
     res.json({ token, user: { id, name, email, role: userRole } });
   } catch (err: any) {
     res.status(500).json({ error: err.message });
+  }
+};
+
+const seedFarmerProducts = async (farmerId: string) => {
+  const products = [
+    { name: "Organic Red Tomatoes", category: "Vegetables", crop: "Tomato", variety: "Country Red", quantity: 150, unit: "kg", price: 40, desc: "Fresh farm-picked red country tomatoes, organic.", img: "https://images.unsplash.com/photo-1595855759920-86582396756a?auto=format&fit=crop&q=80&w=600" },
+    { name: "Fresh Potato Tubers", category: "Vegetables", crop: "Potato", variety: "Jyoti", quantity: 300, unit: "kg", price: 25, desc: "Freshly dug potato tubers, high starch content.", img: "https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&q=80&w=600" },
+    { name: "Sweet Hybrid Corn", category: "Vegetables", crop: "Corn", variety: "Sugar 75", quantity: 80, unit: "kg", price: 30, desc: "Tender, juicy, and sweet hybrid yellow corn.", img: "https://images.unsplash.com/photo-1551754655-cd27e38d2076?auto=format&fit=crop&q=80&w=600" },
+    { name: "Basmati Rice Premium", category: "Grains", crop: "Rice", variety: "Basmati 370", quantity: 500, unit: "kg", price: 85, desc: "Aromatic long grain basmati rice, aged 1 year.", img: "https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&q=80&w=600" },
+    { name: "Sharbati Wheat Grain", category: "Grains", crop: "Wheat", variety: "Sharbati", quantity: 1000, unit: "kg", price: 35, desc: "Premium wheat grain from Madhya Pradesh.", img: "https://images.unsplash.com/photo-1574323347407-f5e1ad6d020b?auto=format&fit=crop&q=80&w=600" },
+    { name: "Red Onions", category: "Vegetables", crop: "Onion", variety: "Nasik Red", quantity: 400, unit: "kg", price: 30, desc: "Firm, crisp red onions direct from farm.", img: "https://images.unsplash.com/photo-1508747703725-719ae257c14a?auto=format&fit=crop&q=80&w=600" },
+    { name: "Nantes Carrots", category: "Vegetables", crop: "Carrot", variety: "Nantes", quantity: 120, unit: "kg", price: 45, desc: "Sweet, crunchy orange carrots, pesticide-free.", img: "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?auto=format&fit=crop&q=80&w=600" },
+    { name: "Green Spinach Bunches", category: "Vegetables", crop: "Spinach", variety: "Palak", quantity: 50, unit: "bunch", price: 15, desc: "Fresh green nutrient-rich spinach leaves.", img: "https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&q=80&w=600" },
+    { name: "Organic Garlic Bulbs", category: "Vegetables", crop: "Garlic", variety: "Ooty", quantity: 90, unit: "kg", price: 120, desc: "Strong aroma garlic bulbs, sun-dried.", img: "https://images.unsplash.com/photo-1540148426945-6cf22a6b2383?auto=format&fit=crop&q=80&w=600" },
+    { name: "Fresh Ginger Rhizomes", category: "Vegetables", crop: "Ginger", variety: "Calicut", quantity: 110, unit: "kg", price: 90, desc: "High quality ginger roots, washed.", img: "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&q=80&w=600" },
+    { name: "Purple Brinjals", category: "Vegetables", crop: "Brinjal", variety: "Varikatri", quantity: 70, unit: "kg", price: 28, desc: "Fresh glossy purple eggplants.", img: "https://images.unsplash.com/photo-1590301157890-4810ed352733?auto=format&fit=crop&q=80&w=600" },
+    { name: "Fresh Cabbage Heads", category: "Vegetables", crop: "Cabbage", variety: "Golden Acre", quantity: 150, unit: "piece", price: 20, desc: "Crunchy green cabbages.", img: "https://images.unsplash.com/photo-1581005886657-3f9fe5a73e6b?auto=format&fit=crop&q=80&w=600" },
+    { name: "Ladyfinger Okra", category: "Vegetables", crop: "Okra", variety: "Anamika", quantity: 60, unit: "kg", price: 35, desc: "Tender green bhindi (ladyfinger).", img: "https://images.unsplash.com/photo-1627916607164-7b20241db935?auto=format&fit=crop&q=80&w=600" },
+    { name: "Cauliflower Florets", category: "Vegetables", crop: "Cauliflower", variety: "Pusa", quantity: 80, unit: "piece", price: 25, desc: "White, fresh cauliflower heads.", img: "https://images.unsplash.com/photo-1568584711075-3d021a7c3ec3?auto=format&fit=crop&q=80&w=600" },
+    { name: "Organic Beetroots", category: "Vegetables", crop: "Beetroot", variety: "Detroit Red", quantity: 100, unit: "kg", price: 40, desc: "Deep red sweet beetroots.", img: "https://images.unsplash.com/photo-1585559606145-21d1b0ff424e?auto=format&fit=crop&q=80&w=600" },
+    { name: "Green Chillies", category: "Vegetables", crop: "Chilli", variety: "Guntur", quantity: 40, unit: "kg", price: 60, desc: "Spicy fresh green chillies.", img: "https://images.unsplash.com/photo-1588252303782-cb80119abd6d?auto=format&fit=crop&q=80&w=600" },
+    { name: "Fresh Coriander", category: "Vegetables", crop: "Coriander", variety: "Kothimbir", quantity: 100, unit: "bunch", price: 10, desc: "Aromatic coriander leaf bunches.", img: "https://images.unsplash.com/photo-1614735249474-3a817b51522c?auto=format&fit=crop&q=80&w=600" },
+    { name: "Bitter Gourd", category: "Vegetables", crop: "Bitter Gourd", variety: "Jaunpuri", quantity: 55, unit: "kg", price: 32, desc: "Healthy organic bitter gourds.", img: "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&q=80&w=600" },
+    { name: "Bottle Gourd", category: "Vegetables", crop: "Bottle Gourd", variety: "Pusa Summer", quantity: 90, unit: "piece", price: 18, desc: "Water-rich green bottle gourds.", img: "https://images.unsplash.com/photo-1592417817098-8f3d6eb19675?auto=format&fit=crop&q=80&w=600" },
+    { name: "Fresh Green Peas", category: "Vegetables", crop: "Peas", variety: "Bonneville", quantity: 130, unit: "kg", price: 50, desc: "Sweet green peas in pod.", img: "https://images.unsplash.com/photo-1592394533824-9440e5d68530?auto=format&fit=crop&q=80&w=600" },
+    { name: "Organic Turmeric", category: "Vegetables", crop: "Turmeric", variety: "Salem", quantity: 80, unit: "kg", price: 110, desc: "Fresh raw turmeric rhizomes.", img: "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&q=80&w=600" },
+    { name: "Sweet Potato", category: "Vegetables", crop: "Sweet Potato", variety: "Varsha", quantity: 140, unit: "kg", price: 30, desc: "Rich in fiber sweet potatoes.", img: "https://images.unsplash.com/photo-1596462502278-27bfdc403348?auto=format&fit=crop&q=80&w=600" }
+  ];
+
+  for (let i = 0; i < products.length; i++) {
+    const p = products[i];
+    const prodId = `prod_seed_${i}_${Date.now()}`;
+    try {
+      await queryRun(
+        `INSERT INTO marketplace_products (id, farmer_id, name, category, crop, variety, quantity, unit, price, harvest_date, quality, description, image_url, status)
+         VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+        [prodId, farmerId, p.name, p.category, p.crop, p.variety, p.quantity, p.unit, p.price, new Date().toISOString().split('T')[0], "Grade A", p.desc, p.img, "ACTIVE"]
+      );
+    } catch (err: any) {
+      console.error("Seed product error:", err.message);
+    }
   }
 };
 
@@ -188,6 +230,7 @@ const loginUser = async (req: any, res: any, forcedRole?: string) => {
             'INSERT INTO farmer_profiles (user_id, farmer_name, phone, address, farm_location, crop_details) VALUES (?, ?, ?, ?, ?, ?)',
             [id, defaultName, 'No Phone', 'No Address', 'Coimbatore, Tamil Nadu', 'Tomato']
           );
+          await seedFarmerProducts(id);
         } else if (role === 'delivery') {
           await queryRun(
             'INSERT INTO delivery_partners (id, name, vehicle_type, vehicle_number, avatar_url, status) VALUES (?, ?, ?, ?, ?, ?)',
@@ -225,6 +268,13 @@ const loginUser = async (req: any, res: any, forcedRole?: string) => {
         'UPDATE users SET remember_login_email = NULL, remember_login_password = NULL WHERE id = ?',
         [user.id]
       );
+    }
+
+    if (user.role === 'farmer') {
+      const prodCheck = await queryGet<{ count: number }>('SELECT count(*) as count FROM marketplace_products WHERE farmer_id = ?', [user.id]);
+      if (prodCheck && prodCheck.count === 0) {
+        await seedFarmerProducts(user.id);
+      }
     }
 
     const token = jwt.sign({ userId: user.id }, JWT_SECRET, { expiresIn: '7d' });
@@ -889,342 +939,10 @@ app.post('/api/demo/run', authenticateToken, async (req, res) => {
 
 // ---------------- MARKETPLACE PRODUCT ROUTES ----------------
 
-const seedDefaultMarketplaceProducts = async (farmerId: string) => {
-  // Deduplicate products: remove duplicate items with the same name for the same farmer
-  try {
-    const duplicates = await queryAll<any>(
-      `SELECT name, COUNT(*) as cnt 
-       FROM marketplace_products 
-       WHERE farmer_id = ? 
-       GROUP BY name 
-       HAVING cnt > 1`,
-      [farmerId]
-    );
-    for (const dup of duplicates) {
-      const oldest = await queryGet<any>(
-        'SELECT id FROM marketplace_products WHERE farmer_id = ? AND name = ? ORDER BY created_at ASC LIMIT 1',
-        [farmerId, dup.name]
-      );
-      if (oldest) {
-        await queryRun(
-          'DELETE FROM marketplace_products WHERE farmer_id = ? AND name = ? AND id != ?',
-          [farmerId, dup.name, oldest.id]
-        );
-      }
-    }
-  } catch (e) {
-    console.error('Deduplication error:', e);
-  }
-
-  const defaultProducts = [
-    {
-      name: "Fresh Red Tomatoes",
-      category: "Vegetables",
-      crop: "Tomato",
-      variety: "Hybrid Red",
-      quantity: 150,
-      unit: "kg",
-      price: 35,
-      quality: "Grade A",
-      description: "Juicy organic tomatoes harvested fresh from Coimbatore fields.",
-      image_url: "https://images.unsplash.com/photo-1595855759920-86582396756a?auto=format&fit=crop&q=80&w=600"
-    },
-    {
-      name: "Organic Russet Potatoes",
-      category: "Vegetables",
-      crop: "Potato",
-      variety: "Russet",
-      quantity: 300,
-      unit: "kg",
-      price: 25,
-      quality: "Grade A",
-      description: "Perfect for mashing and roasting. Grown without chemical pesticides.",
-      image_url: "https://images.unsplash.com/photo-1518977676601-b53f82aba655?auto=format&fit=crop&q=80&w=600"
-    },
-    {
-      name: "Sweet Crunchy Carrots",
-      category: "Vegetables",
-      crop: "Carrot",
-      variety: "Nantes",
-      quantity: 120,
-      unit: "kg",
-      price: 45,
-      quality: "Grade A",
-      description: "Vibrant orange, crisp, and sweet carrots. High in beta-carotene.",
-      image_url: "https://images.unsplash.com/photo-1598170845058-32b9d6a5da37?auto=format&fit=crop&q=80&w=600"
-    },
-    {
-      name: "Fresh Red Onions",
-      category: "Vegetables",
-      crop: "Onion",
-      variety: "Nasik Red",
-      quantity: 500,
-      unit: "kg",
-      price: 28,
-      quality: "Grade A",
-      description: "Pungent and flavorful red onions. Excellent shelf life.",
-      image_url: "https://images.unsplash.com/photo-1508747703725-719ae2c73ee1?auto=format&fit=crop&q=80&w=600"
-    },
-    {
-      name: "Fresh Green Spinach",
-      category: "Vegetables",
-      crop: "Spinach",
-      variety: "Palak",
-      quantity: 80,
-      unit: "bunch",
-      price: 15,
-      quality: "Grade A",
-      description: "Tender Palak leaves rich in iron. Sorted and cleaned.",
-      image_url: "https://images.unsplash.com/photo-1576045057995-568f588f82fb?auto=format&fit=crop&q=80&w=600"
-    },
-    {
-      name: "Purple Brinjal / Eggplant",
-      category: "Vegetables",
-      crop: "Brinjal",
-      variety: "Vennila",
-      quantity: 100,
-      unit: "kg",
-      price: 32,
-      quality: "Grade A",
-      description: "Glossy purple brinjals, perfect for traditional curries.",
-      image_url: "https://images.unsplash.com/photo-1615485290382-441e4d049cb5?auto=format&fit=crop&q=80&w=600"
-    },
-    {
-      name: "Fresh Green Cabbage",
-      category: "Vegetables",
-      crop: "Cabbage",
-      variety: "Golden Acre",
-      quantity: 200,
-      unit: "kg",
-      price: 20,
-      quality: "Grade A",
-      description: "Compact green cabbage heads, crisp and sweet.",
-      image_url: "https://images.unsplash.com/photo-1550182250-339535c68770?auto=format&fit=crop&q=80&w=600"
-    },
-    {
-      name: "Cauliflower Florets",
-      category: "Vegetables",
-      crop: "Cauliflower",
-      variety: "Snowball",
-      quantity: 90,
-      unit: "piece",
-      price: 30,
-      quality: "Grade A",
-      description: "Fresh white cauliflower heads, tight florets.",
-      image_url: "https://images.unsplash.com/photo-1568584711253-138a691f4856?auto=format&fit=crop&q=80&w=600"
-    },
-    {
-      name: "Organic Fresh Ginger",
-      category: "Vegetables",
-      crop: "Ginger",
-      variety: "Local Indian",
-      quantity: 60,
-      unit: "kg",
-      price: 120,
-      quality: "Grade A",
-      description: "Strong, aromatic root ginger. Perfect for tea and spices.",
-      image_url: "https://images.unsplash.com/photo-1599940824399-b87987ceb72a?auto=format&fit=crop&q=80&w=600"
-    },
-    {
-      name: "Garlic Bulbs",
-      category: "Vegetables",
-      crop: "Garlic",
-      variety: "Ooty White",
-      quantity: 110,
-      unit: "kg",
-      price: 140,
-      quality: "Grade A",
-      description: "Large, easy-to-peel white garlic bulbs with strong flavor.",
-      image_url: "https://images.unsplash.com/photo-1540148426945-6cf22a6b2383?auto=format&fit=crop&q=80&w=600"
-    },
-    {
-      name: "Spicy Green Chillies",
-      category: "Vegetables",
-      crop: "Chilli",
-      variety: "Guntur",
-      quantity: 75,
-      unit: "kg",
-      price: 50,
-      quality: "Grade A",
-      description: "Hot and slender green chillies, handpicked.",
-      image_url: "https://images.unsplash.com/photo-1566418854483-a7d03a11b66b?auto=format&fit=crop&q=80&w=600"
-    },
-    {
-      name: "Ruby Red Beetroots",
-      category: "Vegetables",
-      crop: "Beetroot",
-      variety: "Detroit Red",
-      quantity: 140,
-      unit: "kg",
-      price: 40,
-      quality: "Grade A",
-      description: "Earthy, sweet ruby beetroots, great for juices and salads.",
-      image_url: "https://images.unsplash.com/photo-1588611911356-3c58cc1ca53f?auto=format&fit=crop&q=80&w=600"
-    },
-    {
-      name: "Fresh White Radish",
-      category: "Vegetables",
-      crop: "Radish",
-      variety: "Mooli",
-      quantity: 85,
-      unit: "kg",
-      price: 22,
-      quality: "Grade A",
-      description: "Long, crisp white radishes with sharp peppery flavor.",
-      image_url: "https://images.unsplash.com/photo-1629814498845-dfd29486c071?auto=format&fit=crop&q=80&w=600"
-    },
-    {
-      name: "Crisp Green Cucumber",
-      category: "Vegetables",
-      crop: "Cucumber",
-      variety: "English Greenhouse",
-      quantity: 160,
-      unit: "kg",
-      price: 30,
-      quality: "Grade A",
-      description: "Hydrating, thin-skinned crisp cucumbers.",
-      image_url: "https://images.unsplash.com/photo-1449300079323-02e209d9d3a6?auto=format&fit=crop&q=80&w=600"
-    },
-    {
-      name: "Ladies Finger / Okra",
-      category: "Vegetables",
-      crop: "Okra",
-      variety: "Bhindi",
-      quantity: 110,
-      unit: "kg",
-      price: 38,
-      quality: "Grade A",
-      description: "Tender, fresh green okra pods. Sorted.",
-      image_url: "https://images.unsplash.com/photo-1625807903672-881c15f9b4c0?auto=format&fit=crop&q=80&w=600"
-    },
-    {
-      name: "Bitter Gourd",
-      category: "Vegetables",
-      crop: "Bitter Gourd",
-      variety: "Karela",
-      quantity: 95,
-      unit: "kg",
-      price: 42,
-      quality: "Grade A",
-      description: "Fresh ridged bitter gourds, rich in health benefits.",
-      image_url: "https://images.unsplash.com/photo-1608686207856-001b95cf60ca?auto=format&fit=crop&q=80&w=600"
-    },
-    {
-      name: "Fresh Bottle Gourd",
-      category: "Vegetables",
-      crop: "Bottle Gourd",
-      variety: "Lauki",
-      quantity: 130,
-      unit: "kg",
-      price: 25,
-      quality: "Grade A",
-      description: "Long, light green bottle gourds, tender inside.",
-      image_url: "https://images.unsplash.com/photo-1592417817098-8f3d6eb19675?auto=format&fit=crop&q=80&w=600"
-    },
-    {
-      name: "Orange Pumpkin",
-      category: "Vegetables",
-      crop: "Pumpkin",
-      variety: "Kaddu",
-      quantity: 250,
-      unit: "kg",
-      price: 18,
-      quality: "Grade A",
-      description: "Sweet, mature orange pumpkins, great for cooking.",
-      image_url: "https://images.unsplash.com/photo-1506976785307-8732e854ad03?auto=format&fit=crop&q=80&w=600"
-    },
-    {
-      name: "Green Beans",
-      category: "Vegetables",
-      crop: "Beans",
-      variety: "French Beans",
-      quantity: 140,
-      unit: "kg",
-      price: 55,
-      quality: "Grade A",
-      description: "Crisp, stringless green French beans.",
-      image_url: "https://images.unsplash.com/photo-1567375695-300649067414?auto=format&fit=crop&q=80&w=600"
-    },
-    {
-      name: "Fresh Green Peas",
-      category: "Vegetables",
-      crop: "Peas",
-      variety: "Matar",
-      quantity: 100,
-      unit: "kg",
-      price: 60,
-      quality: "Grade A",
-      description: "Sweet, green peas in pods, freshly picked.",
-      image_url: "https://images.unsplash.com/photo-1587570252623-a5c603f07f9c?auto=format&fit=crop&q=80&w=600"
-    },
-    {
-      name: "Sweet Yellow Corn",
-      category: "Vegetables",
-      crop: "Corn",
-      variety: "American Sweet",
-      quantity: 180,
-      unit: "piece",
-      price: 20,
-      quality: "Grade A",
-      description: "Sweet, juicy yellow corn cobs.",
-      image_url: "https://images.unsplash.com/photo-1551754655-cd27e38d2076?auto=format&fit=crop&q=80&w=600"
-    },
-    {
-      name: "Fresh Coriander Bunches",
-      category: "Vegetables",
-      crop: "Coriander",
-      variety: "Dhania",
-      quantity: 120,
-      unit: "bunch",
-      price: 10,
-      quality: "Grade A",
-      description: "Highly aromatic fresh green coriander leaves.",
-      image_url: "https://images.unsplash.com/photo-1608797178974-15b35a61d121?auto=format&fit=crop&q=80&w=600"
-    }
-  ];
-
-  for (const p of defaultProducts) {
-    const exists = await queryGet<any>('SELECT * FROM marketplace_products WHERE farmer_id = ? AND name = ?', [farmerId, p.name]);
-    if (exists) {
-      await queryRun('UPDATE marketplace_products SET image_url = ? WHERE id = ?', [p.image_url, exists.id]);
-      continue;
-    }
-
-    const prodId = 'prod_' + Math.random().toString(36).substr(2, 9);
-    await queryRun(
-      `INSERT INTO marketplace_products (id, farmer_id, name, category, crop, variety, quantity, unit, price, harvest_date, quality, description, image_url, status)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
-      [prodId, farmerId, p.name, p.category, p.crop, p.variety, p.quantity, p.unit, p.price, new Date().toISOString().split('T')[0], p.quality, p.description, p.image_url, 'ACTIVE']
-    );
-  }
-
-  // Also force update Sam's existing products if they exist
-  await queryRun(
-    `UPDATE marketplace_products SET image_url = ? WHERE farmer_id = ? AND name LIKE ?`,
-    ['https://images.unsplash.com/photo-1586201375761-83865001e31c?auto=format&fit=crop&w=600&q=80', farmerId, '%Basmati Rice%']
-  );
-  await queryRun(
-    `UPDATE marketplace_products SET image_url = ? WHERE farmer_id = ? AND name LIKE ?`,
-    ['https://images.unsplash.com/photo-1553279768-865429fa0078?auto=format&fit=crop&w=600&q=80', farmerId, '%Mango%']
-  );
-  await queryRun(
-    `UPDATE marketplace_products SET image_url = ? WHERE farmer_id = ? AND name LIKE ?`,
-    ['https://images.unsplash.com/photo-1592924357228-91a4daadcfea?auto=format&fit=crop&w=600&q=80', farmerId, '%Tomato%']
-  );
-};
-
 // 1. Fetch public marketplace products
 app.get(['/api/marketplace', '/api/products', '/api/products/search'], async (req, res) => {
   const { category, search } = req.query;
   try {
-    const overallCheck = await queryGet<{ count: number }>('SELECT count(*) as count FROM marketplace_products');
-    if (overallCheck && overallCheck.count === 0) {
-      const farmer = await queryGet<any>("SELECT id FROM users WHERE role = 'farmer' LIMIT 1");
-      if (farmer) {
-        await seedDefaultMarketplaceProducts(farmer.id);
-      }
-    }
-
     let sql = `
       SELECT p.*, u.name as farmer_name, f.name as farm_name, f.location as farm_region
       FROM marketplace_products p
@@ -1254,9 +972,6 @@ app.get(['/api/marketplace', '/api/products', '/api/products/search'], async (re
 // 2. Fetch farmer's own products list (Inventory)
 app.get(['/api/products/farmer', '/api/farmer/products'], authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
-    if (req.userId) {
-      await seedDefaultMarketplaceProducts(req.userId);
-    }
     const products = await queryAll<any>(
       'SELECT * FROM marketplace_products WHERE farmer_id = ? ORDER BY created_at DESC',
       [req.userId]
@@ -1343,10 +1058,7 @@ app.put(['/api/products/:id', '/api/farmer/products/:id'], authenticateToken, as
 // 5. Farmer deletes product listing
 app.delete(['/api/products/:id', '/api/farmer/products/:id'], authenticateToken, async (req: AuthenticatedRequest, res) => {
   try {
-    // Delete any referencing order items to prevent SQLite foreign key constraint failure
-    await queryRun('DELETE FROM order_items WHERE product_id = ?', [req.params.id]);
-
-    await queryRun(
+    const result = await queryRun(
       'DELETE FROM marketplace_products WHERE id = ? AND farmer_id = ?',
       [req.params.id, req.userId]
     );
