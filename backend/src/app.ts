@@ -2321,6 +2321,85 @@ app.post('/api/n8n/webhook', async (req, res) => {
     return res.status(401).json({ error: 'Unauthorized webhook access.' });
   }
 
+  // Check if it's a delivery voice update from n8n (no eventType, but has order_id and delivery_status)
+  if (req.body.order_id && req.body.delivery_status) {
+    try {
+      const { order_id, delivery_status, original_message, translated_message } = req.body;
+      
+      const delivery = await queryGet<any>(
+        `SELECT d.id AS delivery_id, d.status AS delivery_status, d.delivery_partner_id, o.id AS order_id, f.id AS farm_id,
+                c.email as customer_email, c.name as customer_name,
+                f_user.email as farmer_email, f_user.name as farmer_name,
+                dp.name as partner_name
+         FROM deliveries d
+         JOIN orders o ON d.order_id = o.id
+         JOIN users c ON o.customer_id = c.id
+         JOIN users f_user ON o.farmer_id = f_user.id
+         LEFT JOIN farms f ON o.farmer_id = f.user_id
+         LEFT JOIN delivery_partners dp ON d.delivery_partner_id = dp.id
+         WHERE o.id = ?`,
+        [order_id]
+      );
+
+      if (!delivery) {
+        return res.status(404).json({ error: 'Order delivery assignment not found.' });
+      }
+
+      let dbDeliveryStatus = '';
+      let dbOrderStatus = '';
+      const inputStatus = delivery_status.toUpperCase();
+
+      if (inputStatus === 'ACCEPTED') {
+        dbDeliveryStatus = 'ACCEPTED';
+        dbOrderStatus = 'DELIVERY_ACCEPTED';
+      } else if (inputStatus === 'GOING_TO_PICKUP') {
+        dbDeliveryStatus = 'GOING_TO_PICKUP';
+        dbOrderStatus = 'GOING_TO_PICKUP';
+      } else if (inputStatus === 'PICKED_UP') {
+        dbDeliveryStatus = 'PICKED_UP';
+        dbOrderStatus = 'PICKED_UP';
+      } else if (inputStatus === 'ON_THE_WAY' || inputStatus === 'OUT_FOR_DELIVERY') {
+        dbDeliveryStatus = 'OUT_FOR_DELIVERY';
+        dbOrderStatus = 'OUT_FOR_DELIVERY';
+      } else if (inputStatus === 'ARRIVED') {
+        dbDeliveryStatus = 'ARRIVED';
+        dbOrderStatus = 'ARRIVED';
+      } else if (inputStatus === 'DELIVERED') {
+        dbDeliveryStatus = 'DELIVERED';
+        dbOrderStatus = 'COMPLETED';
+      }
+
+      if (dbDeliveryStatus && dbOrderStatus) {
+        await queryRun(
+          `UPDATE deliveries SET status = ? WHERE id = ?`,
+          [dbDeliveryStatus, delivery.delivery_id]
+        );
+        await queryRun(
+          `UPDATE orders SET status = ? WHERE id = ?`,
+          [dbOrderStatus, delivery.order_id]
+        );
+
+        // System notification
+        await queryRun(
+          'INSERT INTO alerts (id, farm_id, type, severity, title, message) VALUES (?, ?, ?, ?, ?, ?)',
+          [`voice_alert_${delivery.delivery_id}_${Date.now()}`, delivery.farm_id, 'System', 'Low', `Voice Update: ${dbDeliveryStatus}`, `Order status updated via Voice Update: ${dbDeliveryStatus}. Message: ${translated_message || original_message}`]
+        );
+      }
+
+      return res.json({
+        success: true,
+        message: 'Delivery voice update processed.',
+        farmer_email: delivery.farmer_email,
+        customer_email: delivery.customer_email,
+        farmer_name: delivery.farmer_name,
+        customer_name: delivery.customer_name,
+        delivery_partner_name: delivery.partner_name || 'Arun'
+      });
+    } catch (err: any) {
+      return res.status(500).json({ error: err.message });
+    }
+  }
+
   const { eventType, farmId, data } = req.body;
   console.log(`Received automation webhook from n8n. Event: ${eventType}, Farm: ${farmId}`);
 

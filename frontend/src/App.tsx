@@ -2700,6 +2700,7 @@ function AppContent() {
   };
 
   const startVoiceUpdateRecording = async (orderId: number, deliveryId: number | null) => {
+    let recordingStartTime = Date.now();
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       const mediaRecorder = new MediaRecorder(stream);
@@ -2713,48 +2714,91 @@ function AppContent() {
 
       mediaRecorder.onstop = async () => {
         stream.getTracks().forEach(track => track.stop());
+
+        const duration = Date.now() - recordingStartTime;
+        if (duration < 5000) {
+          alert('Please record a longer voice message.');
+          setVoiceRecordingStates(prev => ({ ...prev, [orderId]: 'IDLE' }));
+          return;
+        }
+
         setVoiceRecordingStates(prev => ({ ...prev, [orderId]: 'UPLOADING' }));
+        
+        // Transition from Uploading to Processing after 1 second to show feedback
+        setTimeout(() => {
+          setVoiceRecordingStates(prev => {
+            if (prev[orderId] === 'UPLOADING') {
+              return { ...prev, [orderId]: 'PROCESSING' };
+            }
+            return prev;
+          });
+        }, 1000);
+
         try {
           const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
-          const formData = new FormData();
-          formData.append('audio', audioBlob, `recording_${orderId}.wav`);
-          formData.append('orderId', String(orderId));
-          if (deliveryId) {
-            formData.append('deliveryId', String(deliveryId));
-          }
+          
+          // Convert audio blob to base64
+          const reader = new FileReader();
+          reader.readAsDataURL(audioBlob);
+          reader.onloadend = async () => {
+            try {
+              const base64Audio = (reader.result as string).split(',')[1];
+              const payload = {
+                audio_base64: base64Audio,
+                order_id: String(orderId),
+                delivery_person_id: deliveryId ? String(deliveryId) : ''
+              };
 
-          const response = await fetch('https://poornima25.app.n8n.cloud/webhook/delivery-voice-update', {
-            method: 'POST',
-            body: formData
-          });
+              const response = await fetch('https://poornima25.app.n8n.cloud/webhook/delivery-voice-update', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+              });
 
-          if (response.ok) {
-            setVoiceRecordingStates(prev => ({ ...prev, [orderId]: 'COMPLETED' }));
-            await loadDeliveryPersonOrders();
-            setTimeout(() => {
-              setVoiceRecordingStates(prev => ({ ...prev, [orderId]: 'IDLE' }));
-            }, 3000);
-          } else {
-            throw new Error('Upload failed');
-          }
+              if (response.ok) {
+                const result = await response.json();
+                if (result.status === 'success' || result.success) {
+                  setVoiceRecordingStates(prev => ({ ...prev, [orderId]: 'COMPLETED' }));
+                  await loadDeliveryPersonOrders();
+                  setTimeout(() => {
+                    setVoiceRecordingStates(prev => ({ ...prev, [orderId]: 'IDLE' }));
+                  }, 4000);
+                } else {
+                  throw new Error(result.error || 'n8n process failed');
+                }
+              } else {
+                throw new Error('Upload failed');
+              }
+            } catch (innerError: any) {
+              console.error('Failed to complete base64 upload:', innerError);
+              setVoiceRecordingStates(prev => ({ ...prev, [orderId]: 'FAILED' }));
+              setTimeout(() => {
+                setVoiceRecordingStates(prev => ({ ...prev, [orderId]: 'IDLE' }));
+              }, 4000);
+            }
+          };
         } catch (uploadError) {
-          console.error('Failed to upload voice update:', uploadError);
+          console.error('Failed to prepare voice upload:', uploadError);
           setVoiceRecordingStates(prev => ({ ...prev, [orderId]: 'FAILED' }));
           setTimeout(() => {
             setVoiceRecordingStates(prev => ({ ...prev, [orderId]: 'IDLE' }));
-          }, 3500);
+          }, 4000);
         }
       };
 
       mediaRecorder.start();
       setVoiceRecordingStates(prev => ({ ...prev, [orderId]: 'RECORDING' }));
+      recordingStartTime = Date.now();
 
-      // Automatically stop after about 6 seconds
+      // Store media recorder reference so we can stop it manually
+      (window as any)[`mediaRecorder_${orderId}`] = mediaRecorder;
+
+      // Automatically stop after 8 seconds
       setTimeout(() => {
         if (mediaRecorder.state !== 'inactive') {
           mediaRecorder.stop();
         }
-      }, 6000);
+      }, 8000);
 
     } catch (err: any) {
       console.error('Error starting audio recording:', err);
@@ -2767,6 +2811,13 @@ function AppContent() {
       setTimeout(() => {
         setVoiceRecordingStates(prev => ({ ...prev, [orderId]: 'IDLE' }));
       }, 3000);
+    }
+  };
+
+  const stopVoiceUpdateRecording = (orderId: number) => {
+    const mediaRecorder = (window as any)[`mediaRecorder_${orderId}`];
+    if (mediaRecorder && mediaRecorder.state !== 'inactive') {
+      mediaRecorder.stop();
     }
   };
 
@@ -6115,26 +6166,35 @@ function AppContent() {
                             <div className="flex justify-end gap-2.5 mt-4">
                               {(() => {
                                 const recState = voiceRecordingStates[o.order_id] || 'IDLE';
-                                let btnText = "🎤 Voice Update";
+                                let btnText = "🎤 Start Recording";
                                 let btnClass = "bg-slate-900 text-white hover:bg-slate-800";
                                 if (recState === 'RECORDING') {
-                                  btnText = "🔴 Recording (6s)...";
-                                  btnClass = "bg-red-500 text-white animate-pulse cursor-not-allowed";
+                                  btnText = "🔴 Stop Recording";
+                                  btnClass = "bg-red-500 text-white animate-pulse hover:bg-red-600";
                                 } else if (recState === 'UPLOADING') {
-                                  btnText = "⏳ Uploading...";
+                                  btnText = "☁ Uploading...";
                                   btnClass = "bg-amber-500 text-white cursor-not-allowed animate-pulse";
+                                } else if (recState === 'PROCESSING') {
+                                  btnText = "🤖 AI Processing...";
+                                  btnClass = "bg-sky-500 text-white cursor-not-allowed animate-pulse";
                                 } else if (recState === 'COMPLETED') {
-                                  btnText = "✅ Completed";
+                                  btnText = "✅ Voice Update Successful";
                                   btnClass = "bg-emerald-500 text-white cursor-not-allowed";
                                 } else if (recState === 'FAILED') {
-                                  btnText = "❌ Failed";
-                                  btnClass = "bg-red-650 bg-red-600 text-white cursor-not-allowed";
+                                  btnText = "❌ Upload Failed";
+                                  btnClass = "bg-red-600 text-white cursor-not-allowed";
                                 }
 
                                 return (
                                   <button
-                                    disabled={recState !== 'IDLE'}
-                                    onClick={() => startVoiceUpdateRecording(o.order_id, o.delivery_id)}
+                                    disabled={recState !== 'IDLE' && recState !== 'RECORDING'}
+                                    onClick={() => {
+                                      if (recState === 'IDLE') {
+                                        startVoiceUpdateRecording(o.order_id, o.delivery_id);
+                                      } else if (recState === 'RECORDING') {
+                                        stopVoiceUpdateRecording(o.order_id);
+                                      }
+                                    }}
                                     className={`px-4 py-2.5 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all ${btnClass}`}
                                   >
                                     {btnText}
@@ -6209,26 +6269,35 @@ function AppContent() {
                       {/* Voice Update Action */}
                       {(() => {
                         const recState = voiceRecordingStates[selectedDeliveryOrder.order_id] || 'IDLE';
-                        let btnText = "🎤 Voice Update";
+                        let btnText = "🎤 Start Recording";
                         let btnClass = "bg-slate-900 text-white hover:bg-slate-800";
                         if (recState === 'RECORDING') {
-                          btnText = "🔴 Recording (6s)...";
-                          btnClass = "bg-red-500 text-white animate-pulse cursor-not-allowed";
+                          btnText = "🔴 Stop Recording";
+                          btnClass = "bg-red-500 text-white animate-pulse hover:bg-red-600";
                         } else if (recState === 'UPLOADING') {
-                          btnText = "⏳ Uploading...";
+                          btnText = "☁ Uploading...";
                           btnClass = "bg-amber-500 text-white cursor-not-allowed animate-pulse";
+                        } else if (recState === 'PROCESSING') {
+                          btnText = "🤖 AI Processing...";
+                          btnClass = "bg-sky-500 text-white cursor-not-allowed animate-pulse";
                         } else if (recState === 'COMPLETED') {
-                          btnText = "✅ Completed";
+                          btnText = "✅ Voice Update Successful";
                           btnClass = "bg-emerald-500 text-white cursor-not-allowed";
                         } else if (recState === 'FAILED') {
-                          btnText = "❌ Failed";
-                          btnClass = "bg-red-650 bg-red-600 text-white cursor-not-allowed";
+                          btnText = "❌ Upload Failed";
+                          btnClass = "bg-red-600 text-white cursor-not-allowed";
                         }
 
                         return (
                           <button
-                            disabled={recState !== 'IDLE'}
-                            onClick={() => startVoiceUpdateRecording(selectedDeliveryOrder.order_id, selectedDeliveryOrder.delivery_id)}
+                            disabled={recState !== 'IDLE' && recState !== 'RECORDING'}
+                            onClick={() => {
+                              if (recState === 'IDLE') {
+                                startVoiceUpdateRecording(selectedDeliveryOrder.order_id, selectedDeliveryOrder.delivery_id);
+                              } else if (recState === 'RECORDING') {
+                                stopVoiceUpdateRecording(selectedDeliveryOrder.order_id);
+                              }
+                            }}
                             className={`w-full py-2.5 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all ${btnClass}`}
                           >
                             {btnText}
