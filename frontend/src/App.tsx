@@ -2404,6 +2404,9 @@ function AppContent() {
   // Dashboard navigation tab
   const [activeTab, setActiveTab] = useState<string>('dashboard');
 
+  // Voice Update recording state
+  const [voiceRecordingStates, setVoiceRecordingStates] = useState<{ [orderId: string]: string }>({});
+
   // Sliders for dynamic What-If simulations
   const [demoMoisture, setDemoMoisture] = useState(28);
   const [demoRainProb, setDemoRainProb] = useState(10);
@@ -2678,6 +2681,14 @@ function AppContent() {
       if (res.ok) {
         const list = await res.json();
         setDeliveryPersonOrders(list);
+        
+        // Sync selected order state
+        if (selectedDeliveryOrder) {
+          const updated = list.find((o: any) => o.order_id === selectedDeliveryOrder.order_id);
+          if (updated) {
+            setSelectedDeliveryOrder(updated);
+          }
+        }
       }
       const prof = await fetchDeliveryProfile();
       if (prof) {
@@ -2685,6 +2696,77 @@ function AppContent() {
       }
     } catch (e) {
       console.error('Error loading delivery orders:', e);
+    }
+  };
+
+  const startVoiceUpdateRecording = async (orderId: number, deliveryId: number | null) => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream);
+      const audioChunks: Blob[] = [];
+
+      mediaRecorder.ondataavailable = (event) => {
+        if (event.data.size > 0) {
+          audioChunks.push(event.data);
+        }
+      };
+
+      mediaRecorder.onstop = async () => {
+        stream.getTracks().forEach(track => track.stop());
+        setVoiceRecordingStates(prev => ({ ...prev, [orderId]: 'UPLOADING' }));
+        try {
+          const audioBlob = new Blob(audioChunks, { type: 'audio/wav' });
+          const formData = new FormData();
+          formData.append('audio', audioBlob, `recording_${orderId}.wav`);
+          formData.append('orderId', String(orderId));
+          if (deliveryId) {
+            formData.append('deliveryId', String(deliveryId));
+          }
+
+          const response = await fetch('https://poornima25.app.n8n.cloud/webhook/delivery-voice-update', {
+            method: 'POST',
+            body: formData
+          });
+
+          if (response.ok) {
+            setVoiceRecordingStates(prev => ({ ...prev, [orderId]: 'COMPLETED' }));
+            await loadDeliveryPersonOrders();
+            setTimeout(() => {
+              setVoiceRecordingStates(prev => ({ ...prev, [orderId]: 'IDLE' }));
+            }, 3000);
+          } else {
+            throw new Error('Upload failed');
+          }
+        } catch (uploadError) {
+          console.error('Failed to upload voice update:', uploadError);
+          setVoiceRecordingStates(prev => ({ ...prev, [orderId]: 'FAILED' }));
+          setTimeout(() => {
+            setVoiceRecordingStates(prev => ({ ...prev, [orderId]: 'IDLE' }));
+          }, 3500);
+        }
+      };
+
+      mediaRecorder.start();
+      setVoiceRecordingStates(prev => ({ ...prev, [orderId]: 'RECORDING' }));
+
+      // Automatically stop after about 6 seconds
+      setTimeout(() => {
+        if (mediaRecorder.state !== 'inactive') {
+          mediaRecorder.stop();
+        }
+      }, 6000);
+
+    } catch (err: any) {
+      console.error('Error starting audio recording:', err);
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        alert('Microphone permission was denied. Please allow microphone access to use voice updates.');
+      } else {
+        alert('Failed to start audio recording: ' + err.message);
+      }
+      setVoiceRecordingStates(prev => ({ ...prev, [orderId]: 'FAILED' }));
+      setTimeout(() => {
+        setVoiceRecordingStates(prev => ({ ...prev, [orderId]: 'IDLE' }));
+      }, 3000);
     }
   };
 
@@ -5720,12 +5802,43 @@ function AppContent() {
                               </div>
                             </div>
 
-                            <button
-                              onClick={() => { setSelectedDeliveryOrder(o); setActiveTab('delivery-details'); }}
-                              className="px-6 py-2.5 bg-[#A8D5BA] hover:opacity-90 text-[#34413A] font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all self-end"
-                            >
-                              <Eye className="w-3.5 h-3.5" /> VIEW DELIVERY RUN
-                            </button>
+                            <div className="flex justify-end gap-2.5 mt-4">
+                              {(() => {
+                                const recState = voiceRecordingStates[o.order_id] || 'IDLE';
+                                let btnText = "🎤 Voice Update";
+                                let btnClass = "bg-slate-900 text-white hover:bg-slate-800";
+                                if (recState === 'RECORDING') {
+                                  btnText = "🔴 Recording (6s)...";
+                                  btnClass = "bg-red-500 text-white animate-pulse cursor-not-allowed";
+                                } else if (recState === 'UPLOADING') {
+                                  btnText = "⏳ Uploading...";
+                                  btnClass = "bg-amber-500 text-white cursor-not-allowed animate-pulse";
+                                } else if (recState === 'COMPLETED') {
+                                  btnText = "✅ Completed";
+                                  btnClass = "bg-emerald-500 text-white cursor-not-allowed";
+                                } else if (recState === 'FAILED') {
+                                  btnText = "❌ Failed";
+                                  btnClass = "bg-red-650 bg-red-600 text-white cursor-not-allowed";
+                                }
+
+                                return (
+                                  <button
+                                    disabled={recState !== 'IDLE'}
+                                    onClick={() => startVoiceUpdateRecording(o.order_id, o.delivery_id)}
+                                    className={`px-4 py-2.5 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all ${btnClass}`}
+                                  >
+                                    {btnText}
+                                  </button>
+                                );
+                              })()}
+
+                              <button
+                                onClick={() => { setSelectedDeliveryOrder(o); setActiveTab('delivery-details'); }}
+                                className="px-6 py-2.5 bg-[#A8D5BA] hover:opacity-90 text-[#34413A] font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all"
+                              >
+                                <Eye className="w-3.5 h-3.5" /> VIEW DELIVERY RUN
+                              </button>
+                            </div>
                           </div>
                         ))}
                       </div>
@@ -5783,6 +5896,36 @@ function AppContent() {
                     </div>
 
                     <div className="mt-6 space-y-3">
+                      {/* Voice Update Action */}
+                      {(() => {
+                        const recState = voiceRecordingStates[selectedDeliveryOrder.order_id] || 'IDLE';
+                        let btnText = "🎤 Voice Update";
+                        let btnClass = "bg-slate-900 text-white hover:bg-slate-800";
+                        if (recState === 'RECORDING') {
+                          btnText = "🔴 Recording (6s)...";
+                          btnClass = "bg-red-500 text-white animate-pulse cursor-not-allowed";
+                        } else if (recState === 'UPLOADING') {
+                          btnText = "⏳ Uploading...";
+                          btnClass = "bg-amber-500 text-white cursor-not-allowed animate-pulse";
+                        } else if (recState === 'COMPLETED') {
+                          btnText = "✅ Completed";
+                          btnClass = "bg-emerald-500 text-white cursor-not-allowed";
+                        } else if (recState === 'FAILED') {
+                          btnText = "❌ Failed";
+                          btnClass = "bg-red-650 bg-red-600 text-white cursor-not-allowed";
+                        }
+
+                        return (
+                          <button
+                            disabled={recState !== 'IDLE'}
+                            onClick={() => startVoiceUpdateRecording(selectedDeliveryOrder.order_id, selectedDeliveryOrder.delivery_id)}
+                            className={`w-full py-2.5 font-bold rounded-xl text-xs flex items-center justify-center gap-1.5 transition-all ${btnClass}`}
+                          >
+                            {btnText}
+                          </button>
+                        );
+                      })()}
+
                       {selectedDeliveryOrder.delivery_status === 'ASSIGNED' && (
                         <button
                           onClick={() => handleDeliveryStatusUpdate(selectedDeliveryOrder.order_id, 'ACCEPTED')}
