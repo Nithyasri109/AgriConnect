@@ -1822,6 +1822,51 @@ function AppContent() {
     );
   };
 
+  const getTreatmentTips = (diseaseName: string) => {
+    const name = (diseaseName || '').toLowerCase();
+    if (name.includes('black spot')) {
+      return [
+        "Remove infected leaves immediately to stop spores from spreading.",
+        "Do not compost diseased leaves; dispose of or burn them.",
+        "Avoid watering leaves directly; water at soil level to keep foliage dry.",
+        "Improve air circulation by pruning surrounding weeds or branches.",
+        "Use suitable copper or sulfur-based organic fungicide if infection spreads.",
+        "Keep the plant bed clean of fallen leaf debris."
+      ];
+    } else if (name.includes('late blight') || name.includes('blight')) {
+      return [
+        "Remove heavily infected leaves, stems, or entire plants immediately.",
+        "Avoid overhead irrigation entirely; keep foliage dry.",
+        "Improve field drainage to reduce humidity around root systems.",
+        "Use recommended crop-safe fungicides under local agriculture advisor guidance.",
+        "Do not store or use infected tubers/fruit for future seeds."
+      ];
+    } else if (name.includes('tomato') || name.includes('leaf mold') || name.includes('yellow leaf curl')) {
+      return [
+        "Remove lower infected leaves to prevent ground splash transmission.",
+        "Use drip irrigation systems if possible to avoid soil splashing.",
+        "Avoid overhead watering; irrigate early in the day.",
+        "Use staking or cages to support plants and improve airflow.",
+        "Apply crop-safe fungicide or neem oil spray only when needed."
+      ];
+    } else {
+      return [
+        "Remove and destroy infected plant parts immediately.",
+        "Keep foliage as dry as possible (water near roots, avoid overhead sprinkling).",
+        "Improve sunlight penetration and airflow (prune surrounding vegetation).",
+        "Avoid overcrowding; space plants properly.",
+        "Check soil moisture and ensure adequate field drainage.",
+        "Contact your local agriculture officer if the disease continues to spread."
+      ];
+    }
+  };
+
+  const checkCropSupport = (cropName: string) => {
+    const name = cropName.toLowerCase();
+    const supportedList = ['maize', 'corn', 'soybean', 'tomato', 'potato', 'apple', 'blueberry', 'cherry', 'grape', 'peach', 'pepper', 'raspberry', 'squash', 'strawberry'];
+    return supportedList.some(item => name.includes(item));
+  };
+
   const renderPlantHealthDetection = () => {
     const activeResult = selectedHistoryItem || plantAnalysisResult;
 
@@ -1922,68 +1967,163 @@ function AppContent() {
 
               {/* Right Column: Disease, Symptoms & Recommendations */}
               <div className="md:col-span-2 space-y-6">
-                <div className={`${cardClass} p-6 rounded-3xl`}>
-                  <div className="flex items-start gap-4 mb-6">
+                
+                {/* 1. Disease Summary Card */}
+                <div className={`${cardClass} p-6 rounded-3xl border border-slate-100 shadow-sm text-left`}>
+                  <div className="flex items-start gap-4">
                     {activeResult.status === 'healthy' ? (
                       <>
                         <div className="w-12 h-12 rounded-full bg-emerald-500/10 flex items-center justify-center border border-emerald-500/20 shrink-0 text-2xl">✓</div>
                         <div className="text-left">
-                          <span className="text-emerald-600 font-bold text-xs uppercase tracking-wider">Status: Healthy</span>
-                          <h3 className="text-2xl font-black text-emerald-800 font-outfit mt-0.5">Plant Appears Healthy</h3>
-                          <p className="text-xs text-slate-500 mt-1">No significant disease was detected in the uploaded image.</p>
+                          <span className="text-emerald-600 font-bold text-xs uppercase tracking-wider">{t('diseaseSummary')}</span>
+                          <h3 className="text-2xl font-black text-emerald-800 font-outfit mt-0.5">{t('healthy') || 'Plant Appears Healthy'}</h3>
+                          <p className="text-xs text-slate-500 mt-1">No significant disease was detected in the uploaded image sample.</p>
                         </div>
                       </>
                     ) : (
                       <>
                         <div className="w-12 h-12 rounded-full bg-amber-500/10 flex items-center justify-center border border-amber-500/20 shrink-0 text-2xl">⚠️</div>
                         <div className="text-left">
-                          <span className="text-amber-600 font-bold text-xs uppercase tracking-wider">Possible Disease Detected</span>
+                          <span className="text-amber-600 font-bold text-xs uppercase tracking-wider">{t('diseaseSummary')}</span>
                           <h3 className="text-2xl font-black text-amber-800 font-outfit mt-0.5">{activeResult.disease}</h3>
                           <p className="text-xs text-slate-500 mt-1">Diagnosis is indicative based on leaf visual symptoms. Consult a local advisor if needed.</p>
                         </div>
                       </>
                     )}
                   </div>
-
-                  <div className="space-y-4 text-left text-sm">
-                    {activeResult.symptoms && (
-                      <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100">
-                        <h4 className="font-bold text-[#34413A] mb-1 text-xs uppercase tracking-wider">Observed Symptoms</h4>
-                        <p className="text-xs text-slate-600 leading-relaxed">{activeResult.symptoms}</p>
-                      </div>
-                    )}
-
-                    {activeResult.recommendations && activeResult.recommendations.length > 0 && (
-                      <div className="p-4 bg-[#FAFCF8] rounded-2xl border border-[#DFF2E1]">
-                        <h4 className="font-bold text-emerald-800 mb-2 text-xs uppercase tracking-wider">Basic Recommendations</h4>
-                        <ul className="space-y-1.5 text-xs text-[#6B756E]">
-                          {activeResult.recommendations.map((rec: string, i: number) => (
-                            <li key={i} className="flex items-start gap-2">
-                              <span className="text-emerald-500 shrink-0 mt-0.5">▪</span>
-                              <span>{rec}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-
-                    {activeResult.prevention && activeResult.prevention.length > 0 && (
-                      <div className="p-4 bg-[#FFF8E7]/40 rounded-2xl border border-[#BFD8C2]/20">
-                        <h4 className="font-bold text-[#34413A] mb-2 text-xs uppercase tracking-wider">Prevention Suggestions</h4>
-                        <ul className="space-y-1.5 text-xs text-slate-600">
-                          {activeResult.prevention.map((prev: string, i: number) => (
-                            <li key={i} className="flex items-start gap-2">
-                              <span className="text-slate-400 shrink-0 mt-0.5">▪</span>
-                              <span>{prev}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                  </div>
                 </div>
 
-                <div className="flex gap-4">
+                {/* 2. Observed Symptoms Card */}
+                {activeResult.symptoms && (
+                  <div className={`${cardClass} p-5 rounded-3xl border border-slate-100 shadow-sm text-left`}>
+                    <h4 className="font-bold text-[#34413A] mb-2 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                      <span>🍃</span> {t('observedSymptoms')}
+                    </h4>
+                    <p className="text-xs text-slate-600 leading-relaxed font-medium">{activeResult.symptoms}</p>
+                  </div>
+                )}
+
+                {activeResult.status !== 'healthy' && (
+                  <>
+                    {/* 3. Recommended Fertilizer & Nutrients Card */}
+                    <div className={`${cardClass} p-5 rounded-3xl border border-slate-100 shadow-sm text-left`}>
+                      <h4 className="font-bold text-emerald-800 mb-2 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                        <span>🧪</span> {t('recommendedFertilizers')}
+                      </h4>
+                      <p className="text-xs text-slate-500 mb-3 leading-relaxed italic font-medium">
+                        "Fertilizers support plant recovery, but disease control may also need pruning, hygiene, drainage, or fungicide."
+                      </p>
+                      <ul className="space-y-2 text-xs text-[#6B756E] font-medium">
+                        <li className="flex items-start gap-2">
+                          <span className="text-emerald-500 shrink-0 mt-0.5">▪</span>
+                          <span>Well-rotted compost/FYM: improves soil health & general crop vigor.</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-emerald-500 shrink-0 mt-0.5">▪</span>
+                          <span>Neem cake: supports root health and increases pest resistance.</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-emerald-500 shrink-0 mt-0.5">▪</span>
+                          <span>Balanced NPK: supplies baseline nutrients for recovery growth.</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-emerald-500 shrink-0 mt-0.5">▪</span>
+                          <span>Potassium: improves stem strength and cellular defense mechanisms.</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-emerald-500 shrink-0 mt-0.5">▪</span>
+                          <span>Micronutrient spray: resolves secondary deficiencies in leaves.</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-red-500 shrink-0 mt-0.5">⚠️</span>
+                          <span>Avoid excess nitrogen: soft growth increases vulnerability to disease spread.</span>
+                        </li>
+                      </ul>
+                    </div>
+
+                    {/* 4. Treatment Steps Card */}
+                    <div className={`${cardClass} p-5 rounded-3xl border border-slate-100 shadow-sm text-left`}>
+                      <h4 className="font-bold text-amber-800 mb-2 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                        <span>🩹</span> {t('treatmentSteps')}
+                      </h4>
+                      <ul className="space-y-2 text-xs text-slate-600 font-medium">
+                        {getTreatmentTips(activeResult.disease).map((tip, idx) => (
+                          <li key={idx} className="flex items-start gap-2">
+                            <span className="text-amber-500 shrink-0 mt-0.5">▪</span>
+                            <span>{tip}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    {/* 5. Prevention Tips Card */}
+                    <div className={`${cardClass} p-5 rounded-3xl border border-slate-100 shadow-sm text-left`}>
+                      <h4 className="font-bold text-slate-700 mb-2 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                        <span>🛡️</span> {t('preventionTips')}
+                      </h4>
+                      <ul className="space-y-2 text-xs text-slate-600 font-medium">
+                        <li className="flex items-start gap-2">
+                          <span className="text-slate-400 shrink-0 mt-0.5">▪</span>
+                          <span>Use healthy, certified disease-free seeds or seedlings.</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-slate-400 shrink-0 mt-0.5">▪</span>
+                          <span>Maintain proper crop spacing to permit wind flow.</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-slate-400 shrink-0 mt-0.5">▪</span>
+                          <span>Water near the root zone, keeping leaves dry.</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-slate-400 shrink-0 mt-0.5">▪</span>
+                          <span>Clear competitive weeds regularly.</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-slate-400 shrink-0 mt-0.5">▪</span>
+                          <span>Sanitize tools with rubbing alcohol after cutting diseased wood.</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-slate-400 shrink-0 mt-0.5">▪</span>
+                          <span>Rotate crops each season to break pest life cycles.</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-slate-400 shrink-0 mt-0.5">▪</span>
+                          <span>Inspect leaves weekly for early signs of disease.</span>
+                        </li>
+                        <li className="flex items-start gap-2">
+                          <span className="text-slate-400 shrink-0 mt-0.5">▪</span>
+                          <span>Avoid over-fertilizing with mineral nitrogen.</span>
+                        </li>
+                      </ul>
+                    </div>
+
+                    {/* 6. Expert Help Card */}
+                    <div className={`${cardClass} p-5 rounded-3xl border border-red-200/40 bg-red-500/5 text-left`}>
+                      <h4 className="font-bold text-red-800 mb-2 text-xs uppercase tracking-wider flex items-center gap-1.5">
+                        <span>📞</span> {t('whenToContactExpert')}
+                      </h4>
+                      <p className="text-xs text-red-800 leading-relaxed font-semibold">
+                        Contact a local agriculture officer or expert if the infection spreads quickly, affects many plants, or the crop starts wilting.
+                      </p>
+                    </div>
+                  </>
+                )}
+
+                {activeResult.status === 'healthy' && (
+                  <div className={`${cardClass} p-5 rounded-3xl border border-slate-100 shadow-sm text-left`}>
+                    <h4 className="font-bold text-emerald-800 mb-2 text-xs uppercase tracking-wider">Recommendations</h4>
+                    <ul className="space-y-2 text-xs text-[#6B756E]">
+                      {activeResult.recommendations?.map((rec: string, i: number) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <span className="text-emerald-500 shrink-0 mt-0.5">▪</span>
+                          <span>{rec}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+
+                <div className="flex gap-4 pt-2">
                   <button
                     onClick={() => {
                       setPlantAnalysisResult(null);
@@ -1991,7 +2131,7 @@ function AppContent() {
                       setPlantImage(null);
                       setPlantPreview(null);
                     }}
-                    className="flex-1 py-3.5 bg-lime-500 hover:bg-lime-400 text-slate-950 font-bold rounded-2xl text-xs tracking-wider uppercase transition-all shadow-md text-center"
+                    className="flex-1 py-3 bg-lime-500 hover:bg-lime-400 text-slate-955 font-bold rounded-2xl text-xs tracking-wider uppercase transition-all shadow-md text-center"
                   >
                     Check Another Plant
                   </button>
@@ -2010,6 +2150,27 @@ function AppContent() {
           <p className="text-slate-500 text-sm mt-1">
             Upload or capture a photo of your plant to check for possible diseases.
           </p>
+          {selectedPlantForHealth && (
+            <div className="mt-3 space-y-2 max-w-sm">
+              <div className="flex items-center justify-between bg-slate-900/10 p-3 rounded-xl border border-slate-200/50">
+                <span className="text-xs font-semibold text-slate-600">
+                  Selected Plant: <strong className="text-[#34413A]">{selectedPlantForHealth}</strong>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => setSelectedPlantForHealth('')}
+                  className="text-[10px] text-red-500 hover:text-red-700 font-bold"
+                >
+                  Clear
+                </button>
+              </div>
+              {!checkCropSupport(selectedPlantForHealth) && (
+                <div className="p-2.5 bg-amber-500/10 border border-amber-500/25 rounded-xl text-[10px] text-amber-600 font-semibold">
+                  ⚠️ Detection support may be limited for this crop.
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
@@ -2229,6 +2390,7 @@ function AppContent() {
   const [cameraStream, setCameraStream] = useState<MediaStream | null>(null);
   const [cameraPermissionError, setCameraPermissionError] = useState<string | null>(null);
   const [selectedHistoryItem, setSelectedHistoryItem] = useState<any | null>(null);
+  const [selectedPlantForHealth, setSelectedPlantForHealth] = useState<string>('');
   const videoRef = React.useRef<HTMLVideoElement>(null);
 
   // Authentication forms
