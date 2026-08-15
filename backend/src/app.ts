@@ -23,7 +23,8 @@ import { DemoService } from './services/demoService.js';
 dotenv.config();
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const HOST = process.env.HOST || '127.0.0.1';
+const PORT = Number(process.env.PORT) || 3001;
 const JWT_SECRET = process.env.JWT_SECRET || 'agrimind-secret-key-12345';
 
 app.use(cors());
@@ -2846,8 +2847,8 @@ setInterval(async () => {
 // Start Database & Boot Server
 initDb()
   .then(() => {
-    app.listen(PORT, () => {
-      console.log(`AgriMind AI Backend running on port ${PORT}`);
+    app.listen(PORT, HOST, () => {
+      console.log(`AgriMind AI Backend running on http://${HOST}:${PORT}`);
     });
   })
   .catch(err => {

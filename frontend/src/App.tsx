@@ -1541,76 +1541,76 @@ function AppContent() {
 
   const themesConfig = {
     forest: {
-      primary: '#A8D5BA',
-      primaryLight: '#DFF2E1',
-      secondary: '#BFD8C2',
-      accent: '#CDEFE3',
-      background: '#F7FBF7',
+      primary: '#10B981',
+      primaryLight: '#ECFDF5',
+      secondary: '#34D399',
+      accent: '#059669',
+      background: '#F8FAFC',
       card: '#FFFFFF',
-      text: '#34413A',
-      mutedText: '#6B756E',
-      border: '#DFF2E1',
-      innerBox: '#FFF8E7'
+      text: '#0F172A',
+      mutedText: '#475569',
+      border: '#E2E8F0',
+      innerBox: '#ECFDF5'
     },
     rose: {
-      primary: '#E8AEB7',
-      primaryLight: '#F8DDE1',
-      secondary: '#F3C6CE',
-      accent: '#F6C6D8',
-      background: '#FFF8FA',
+      primary: '#475569',
+      primaryLight: '#F1F5F9',
+      secondary: '#94A3B8',
+      accent: '#334155',
+      background: '#FAFBFD',
       card: '#FFFFFF',
-      text: '#49383D',
-      mutedText: '#7A6970',
-      border: '#F8DDE1',
-      innerBox: '#FFF0F3'
+      text: '#0F172A',
+      mutedText: '#64748B',
+      border: '#E2E8F0',
+      innerBox: '#F1F5F9'
     },
     lavender: {
-      primary: '#B8A9D9',
-      primaryLight: '#E7DFF5',
-      secondary: '#D8C7F1',
-      accent: '#CFC1E8',
-      background: '#FAF8FF',
+      primary: '#6366F1',
+      primaryLight: '#EEF2FF',
+      secondary: '#818CF8',
+      accent: '#4F46E5',
+      background: '#FAFAFF',
       card: '#FFFFFF',
-      text: '#3F394A',
-      mutedText: '#716A7D',
-      border: '#E7DFF5',
-      innerBox: '#F3EFFF'
+      text: '#0F172A',
+      mutedText: '#475569',
+      border: '#E2E8F0',
+      innerBox: '#EEF2FF'
     },
     sky: {
-      primary: '#9CC9E4',
-      primaryLight: '#DDEFFA',
-      secondary: '#B8DDF0',
-      accent: '#C6DDF5',
-      background: '#F5FBFF',
+      primary: '#0D9488',
+      primaryLight: '#F0FDFA',
+      secondary: '#2DD4BF',
+      accent: '#0F766E',
+      background: '#F8FAFC',
       card: '#FFFFFF',
-      text: '#34434D',
-      mutedText: '#687781',
-      border: '#DDEFFA',
-      innerBox: '#EDF6FF'
+      text: '#0F172A',
+      mutedText: '#475569',
+      border: '#E2E8F0',
+      innerBox: '#F0FDFA'
     },
     peach: {
-      primary: '#F2B8A2',
-      primaryLight: '#FCE3D9',
-      secondary: '#FFD6BA',
-      accent: '#F7C7A9',
-      background: '#FFF9F5',
+      primary: '#D97706',
+      primaryLight: '#FFF7ED',
+      secondary: '#FB923C',
+      accent: '#B45309',
+      background: '#FAFAF9',
       card: '#FFFFFF',
-      text: '#4A3B35',
-      mutedText: '#796B64',
-      border: '#FCE3D9',
-      innerBox: '#FFF1EB'
+      text: '#1C1917',
+      mutedText: '#57534E',
+      border: '#E7E5E4',
+      innerBox: '#FFF7ED'
     },
     sunflower: {
-      primary: '#E6C978',
-      primaryLight: '#F9F0C8',
-      secondary: '#F3E3A1',
-      accent: '#F7E8B0',
-      background: '#FFFDF4',
+      primary: '#CA8A04',
+      primaryLight: '#FEF9C3',
+      secondary: '#FACC15',
+      accent: '#A16207',
+      background: '#FAFAF9',
       card: '#FFFFFF',
-      text: '#48412F',
-      mutedText: '#776F58',
-      border: '#F9F0C8',
-      innerBox: '#FFFBE6'
+      text: '#1C1917',
+      mutedText: '#57534E',
+      border: '#E7E5E4',
+      innerBox: '#FEF9C3'
     }
   };
 
@@ -1705,12 +1705,12 @@ function AppContent() {
   };
 
   const themeOptions: { id: typeof theme; name: string; icon: string; colors: string[] }[] = [
-    { id: 'forest', name: 'Forest Pastel', icon: '🌿', colors: ['#A8D5BA', '#DFF2E1', '#BFD8C2'] },
-    { id: 'rose', name: 'Rose Pastel', icon: '🌸', colors: ['#E8AEB7', '#F8DDE1', '#F3C6CE'] },
-    { id: 'lavender', name: 'Lavender Pastel', icon: '🪻', colors: ['#B8A9D9', '#E7DFF5', '#D8C7F1'] },
-    { id: 'sky', name: 'Sky Pastel', icon: '🩵', colors: ['#9CC9E4', '#DDEFFA', '#B8DDF0'] },
-    { id: 'peach', name: 'Peach Pastel', icon: '🍑', colors: ['#F2B8A2', '#FCE3D9', '#FFD6BA'] },
-    { id: 'sunflower', name: 'Sunflower Pastel', icon: '🌼', colors: ['#E6C978', '#F9F0C8', '#F3E3A1'] }
+    { id: 'forest', name: 'Emerald Precision', icon: '🌿', colors: ['#10B981', '#ECFDF5', '#34D399'] },
+    { id: 'rose', name: 'Nordic Steel', icon: '🩶', colors: ['#475569', '#F1F5F9', '#94A3B8'] },
+    { id: 'lavender', name: 'Bio-Tech Indigo', icon: '🧬', colors: ['#6366F1', '#EEF2FF', '#818CF8'] },
+    { id: 'sky', name: 'Precision Teal', icon: '💧', colors: ['#0D9488', '#F0FDFA', '#2DD4BF'] },
+    { id: 'peach', name: 'Terracotta Clay', icon: '🪵', colors: ['#D97706', '#FFF7ED', '#FB923C'] },
+    { id: 'sunflower', name: 'Harvest Amber', icon: '🌾', colors: ['#CA8A04', '#FEF9C3', '#FACC15'] }
   ];
 
   const renderThemeSelector = (alignRight: boolean = true) => {
@@ -1837,7 +1837,7 @@ function AppContent() {
     if (activeResult) {
       const isLowConfidence = activeResult.confidence < 50.0;
       const displayUrl = activeResult.imageUrl 
-        ? (activeResult.imageUrl.startsWith('http') ? activeResult.imageUrl : `http://localhost:3000${activeResult.imageUrl}`)
+        ? (activeResult.imageUrl.startsWith('http') ? activeResult.imageUrl : `http://localhost:3001${activeResult.imageUrl}`)
         : (plantPreview || '');
 
       return (
